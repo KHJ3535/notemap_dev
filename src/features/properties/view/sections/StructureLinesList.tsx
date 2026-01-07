@@ -17,25 +17,6 @@ const toNum = (v: unknown): number | undefined => {
   return undefined;
 };
 
-/** any → 금액 문자열 ("1234만원" | "1.2억" | "-") */
-const toPriceText = (v: unknown): string => {
-  const n = toNum(v);
-  if (typeof n !== "number") return "-";
-
-  // n은 "만원" 단위라고 가정
-  if (Math.abs(n) >= 10000) {
-    const eok = n / 10000;
-    // 소수점 한 자리까지만 (정수면 소수 제거)
-    const text = Number.isInteger(eok)
-      ? String(eok)
-      : (Math.floor(eok * 10) / 10).toFixed(1);
-
-    return `${text}억`;
-  }
-
-  return `${Math.trunc(n)}만원`;
-};
-
 /** any → 정수 문자열 | "-" */
 const toNumText = (v: unknown): string => {
   const n = toNum(v);
@@ -93,10 +74,10 @@ export default function StructureLinesList({
               .join(", ") || "-";
 
           // 최소/최대는 숫자만 추려서 노출 (문자면 숫자 부분만 파싱)
-          const minText = toPriceText(
+          const minText = toNumText(
             (l as any)?.primary ?? (l as any)?.minPrice
           );
-          const maxText = toPriceText(
+          const maxText = toNumText(
             (l as any)?.secondary ?? (l as any)?.maxPrice
           );
 
@@ -110,32 +91,39 @@ export default function StructureLinesList({
               key={key}
               className="min-w-0 rounded-md border bg-white px-2 py-2"
             >
-              <div className="flex items-center min-w-0">
-                {/* 방/욕실 */}
-                <div className="flex-1 min-w-0 text-center text-sm">{rb}</div>
+              <div className="flex flex-col min-w-0">
+                {/* ===== 헤더 라인 ===== */}
+                <div className="flex items-center min-w-0 text-xs text-gray-500 mb-1">
+                  <div className="flex-1 text-center">방/욕실</div>
 
-                {/* | */}
-                <div className="h-5 w-px bg-gray-200 mx-2 shrink-0" />
+                  <div className="w-px bg-gray-200 mx-2 h-4" />
 
-                {/* 특징 (모바일 폰트 축소) */}
-                <div className="flex-1 min-w-0 text-center text-[11px] sm:text-sm truncate">
-                  {features}
+                  <div className="flex-1 text-center">특징</div>
+
+                  <div className="w-px bg-gray-200 mx-2 h-4" />
+
+                  <div className="flex-[1.2] sm:flex-[2] text-center">금액</div>
                 </div>
 
-                {/* | */}
-                <div className="h-5 w-px bg-gray-200 mx-2 shrink-0" />
+                {/* ===== 값 라인 ===== */}
+                <div className="flex items-center min-w-0 text-sm">
+                  <div className="flex-1 min-w-0 text-center truncate">
+                    {rb}
+                  </div>
 
-                {/* 최소 (모바일에서 폭 좁게) */}
-                <div className="flex-[0.6] sm:flex-1 min-w-0 text-center text-sm truncate">
-                  {minText}
-                </div>
+                  <div className="w-px bg-gray-200 mx-2 h-5" />
 
-                {/* | */}
-                <div className="h-5 w-px bg-gray-200 mx-2 shrink-0" />
+                  <div className="flex-1 min-w-0 text-center truncate">
+                    {features}
+                  </div>
 
-                {/* 최대 (모바일에서 폭 좁게) */}
-                <div className="flex-[0.6] sm:flex-1 min-w-0 text-center text-sm truncate">
-                  {maxText}
+                  <div className="w-px bg-gray-200 mx-2 h-5" />
+
+                  <div className="flex-[1.2] sm:flex-[2] min-w-0 flex items-center justify-center truncate">
+                    <span>{minText}</span>
+                    <span className="mx-2 text-gray-400">~</span>
+                    <span>{maxText}</span>
+                  </div>
                 </div>
               </div>
             </div>
