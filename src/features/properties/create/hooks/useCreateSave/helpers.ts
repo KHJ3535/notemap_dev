@@ -45,7 +45,8 @@ export function computeCanSave({
 
   // 구조별 최소/최대 매매가 체크
   const unitLinesPriceError = validateUnitPriceRanges(
-    Array.isArray(f.unitLines) ? (f.unitLines as any[]) : []
+    Array.isArray(f.unitLines) ? (f.unitLines as any[]) : [],
+    f.remainingHouseholds
   );
 
   // 모든 추가 필드는 옵셔널 (이름, 주소, 분양실 전화번호만 필수)

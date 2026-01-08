@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/atoms/Button/Button";
-import { Plus, Star, Trash2 } from "lucide-react";
+import { Plus, Star, Trash2, X } from "lucide-react";
 import StarMeter from "@/features/properties/view/ui/parts/StarMeter";
 
 import type React from "react";
@@ -40,6 +40,8 @@ export default function ContextMenuPanel(props: ContextMenuPanelProps) {
     canView,
     isAlreadyReserved,
     isReservedByOtherAccount,
+    assigneeName,
+    onCancelReservation,
 
     // 핸들러
     stopAll,
@@ -64,11 +66,16 @@ export default function ContextMenuPanel(props: ContextMenuPanelProps) {
     >
       {/* ---------------- 헤더 ---------------- */}
       <div className="flex items-start justify-between gap-3">
-        <div id={headingId} className="min-w-0">
-          <div className="flex items-center gap-2 min-w-0">
+        <div id={headingId} className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 min-w-0 flex-wrap">
             <div className="font-semibold text-base truncate min-w-0">
               {headerTitle}
             </div>
+            {assigneeName && (
+              <span className="text-xs text-gray-500 font-normal shrink-0">
+                예약자: {assigneeName}
+              </span>
+            )}
             {Number(parkingGrade) > 0 && (
               <StarMeter value={Number(parkingGrade)} size="sm" showValue />
             )}
@@ -164,16 +171,33 @@ export default function ContextMenuPanel(props: ContextMenuPanelProps) {
 
       {/* ---------------- 액션 구역 ---------------- */}
       {reserved ? (
-        <Button
-          type="button"
-          variant="default"
-          size="lg"
-          onClick={handleCreateClick}
-          disabled={isReservedByOtherAccount}
-          className="w-full"
-        >
-          {isReservedByOtherAccount ? "이미 예약됨" : "매물 정보 입력"}
-        </Button>
+        <div className="flex flex-col gap-2">
+          <Button
+            type="button"
+            variant="default"
+            size="lg"
+            onClick={handleCreateClick}
+            disabled={isReservedByOtherAccount}
+            className="w-full"
+          >
+            {isReservedByOtherAccount ? "이미 예약됨" : "매물 정보 입력"}
+          </Button>
+          {onCancelReservation && (
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              onClick={() => {
+                onCancelReservation();
+                onClose();
+              }}
+              className="w-full text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+            >
+              <X className="w-4 h-4 mr-2" />
+              답사지 예약 취소
+            </Button>
+          )}
+        </div>
       ) : planned ? (
         <Button
           type="button"

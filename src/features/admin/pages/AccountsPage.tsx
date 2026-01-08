@@ -13,7 +13,7 @@ import type { UserRow, RoleKey } from "@/features/users/types";
 import { api } from "@/shared/api/api";
 import { useToast } from "@/hooks/use-toast";
 import { SearchBar } from "@/features/table/components/SearchBar";
-import { getCredentialIdFromAccountId } from "@/features/users/api/account";
+import { getCredentialIdFromAccountId, getCredentialDetail } from "@/features/users/api/account";
 
 export default function AccountsPage() {
   const { toast } = useToast();
@@ -102,6 +102,8 @@ export default function AccountsPage() {
   // 백엔드 응답을 UserRow 형식으로 변환
   const transformToUserRows = (employees: EmployeeListItem[]): UserRow[] => {
     return employees.map((employee) => {
+      // role 캐시에서 가져오기
+      const role = roleMap.get(employee.accountId);
       return {
         id: employee.accountId, // accountId를 id로 사용
         name: employee.name || "이름 없음",
@@ -109,6 +111,8 @@ export default function AccountsPage() {
         positionRank: employee.positionRank || undefined,
         photo_url: employee.profileUrl || undefined,
         teamName: employee.teamName || undefined,
+        favoritePins: employee.favoritePins || [], // 계정별 즐겨찾기 핀 목록 포함
+        role: role, // role 정보 포함
       };
     });
   };
@@ -116,10 +120,52 @@ export default function AccountsPage() {
   // accountId -> credentialId 매핑 캐시
   const credentialIdMapRef = React.useRef<Map<string, string>>(new Map());
   const loadingCredentialIdsRef = React.useRef<Set<string>>(new Set());
+  // accountId -> role 매핑 캐시
+  const [roleMap, setRoleMap] = React.useState<Map<string, "admin" | "manager" | "staff">>(new Map());
+  const loadingRolesRef = React.useRef<Set<string>>(new Set());
 
-  // 계정 목록이 변경될 때 credentialId 매핑 미리 로드 (선택적)
-  // 주의: 이 함수는 비효율적이므로 필요할 때만 호출하도록 개선 가능
-  // 현재는 수정/삭제 클릭 시에만 credentialId를 조회하도록 함
+  // 계정 목록이 변경될 때 각 계정의 role 정보 미리 로드
+  React.useEffect(() => {
+    if (!employeesList || employeesList.length === 0) return;
+
+    const loadRoles = async () => {
+      const accountsToLoad = employeesList.filter(
+        (employee) => !roleMap.has(employee.accountId) && !loadingRolesRef.current.has(employee.accountId)
+      );
+
+      if (accountsToLoad.length === 0) return;
+
+      const newRoleMap = new Map(roleMap);
+
+      // 병렬로 role 조회
+      await Promise.all(
+        accountsToLoad.map(async (employee) => {
+          const accountId = employee.accountId;
+          loadingRolesRef.current.add(accountId);
+
+          try {
+            // credentialId 조회
+            const credentialId = await getCredentialIdFromAccountId(accountId);
+            if (credentialId) {
+              // credential detail 조회하여 role 가져오기
+              const detail = await getCredentialDetail(credentialId);
+              console.log(`계정 ${accountId}의 role:`, detail.role);
+              newRoleMap.set(accountId, detail.role);
+            }
+          } catch (error) {
+            console.error(`계정 ${accountId}의 role 조회 실패:`, error);
+          } finally {
+            loadingRolesRef.current.delete(accountId);
+          }
+        })
+      );
+
+      // 상태 업데이트
+      setRoleMap(newRoleMap);
+    };
+
+    loadRoles();
+  }, [employeesList]);
 
   const userRows = useMemo(() => {
     if (!employeesList) return [];
@@ -131,7 +177,7 @@ export default function AccountsPage() {
     }
 
     return rows;
-  }, [employeesList, sortDirection]);
+  }, [employeesList, sortDirection, roleMap]);
 
   // 계정 제거/비활성화 핸들러
   const handleRemove = async (accountId: string) => {
@@ -230,6 +276,13 @@ export default function AccountsPage() {
     setViewingFavoritesAccountName(account?.name || "");
   };
 
+  // 현재 보고 있는 계정의 favoritePins 가져오기
+  const viewingAccountFavorites = useMemo(() => {
+    if (!viewingFavoritesAccountId) return null;
+    const account = userRows.find((row) => row.id === viewingFavoritesAccountId);
+    return account?.favoritePins || [];
+  }, [viewingFavoritesAccountId, userRows]);
+
   // 즐겨찾기 모달 닫기
   const handleCloseFavoritesModal = () => {
     setViewingFavoritesAccountId(null);
@@ -296,6 +349,7 @@ export default function AccountsPage() {
         open={!!viewingFavoritesAccountId}
         accountId={viewingFavoritesAccountId}
         accountName={viewingFavoritesAccountName}
+        favoritePins={viewingAccountFavorites || []}
         onClose={handleCloseFavoritesModal}
       />
     </div>

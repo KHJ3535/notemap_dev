@@ -51,9 +51,3 @@
 
 ---
 
-## 5. Storybook 규칙
-
-- 공용 컴포넌트 → `components/*/*.stories.tsx`
-- 도메인 컴포넌트 → `features/*/**/*.stories.tsx`
-
----

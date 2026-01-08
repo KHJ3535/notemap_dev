@@ -1,21 +1,22 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useMemo } from "react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/atoms/Dialog/Dialog";
-import { useQuery } from "@tanstack/react-query";
-import { getFavoriteGroups, type FavoriteGroup } from "@/features/favorites/api/favorites";
-import { getPinRaw } from "@/shared/api/pins/queries/getPin";
 import { FavoriteGroupList } from "./FavoriteGroupList";
 
 interface AccountFavoritesModalProps {
   open: boolean;
   accountId: string | null;
   accountName?: string;
+  favoritePins?: Array<{
+    id: string;
+    name: string | null;
+  }>; // 해당 계정의 즐겨찾기 핀 목록 (백엔드에서 제공)
   onClose: () => void;
 }
 
@@ -23,66 +24,35 @@ export function AccountFavoritesModal({
   open,
   accountId,
   accountName,
+  favoritePins = [],
   onClose,
 }: AccountFavoritesModalProps) {
-  // 해당 계정의 즐겨찾기 목록 조회
-  const { data: favoriteGroups, isLoading, error } = useQuery({
-    queryKey: ["account-favorites", accountId],
-    queryFn: () => getFavoriteGroups(true),
-    enabled: open && !!accountId,
-    // TODO: 관리자 권한으로 특정 accountId의 즐겨찾기를 조회하는 API 필요
-    // 현재는 로그인한 사용자의 즐겨찾기만 조회 가능
-  });
-
-  // 매물 정보 조회 (pinId -> 매물 이름)
-  const [pinNamesMap, setPinNamesMap] = useState<Map<string, string>>(new Map());
-
-  useEffect(() => {
-    if (!favoriteGroups || favoriteGroups.length === 0) {
-      setPinNamesMap(new Map());
-      return;
+  // favoritePins를 단일 그룹으로 변환 (백엔드에서 그룹 정보를 제공하지 않으므로)
+  const groupsWithPinNames = useMemo(() => {
+    if (!favoritePins || favoritePins.length === 0) {
+      return [];
     }
 
-    // 모든 pinId 수집
-    const allPinIds = new Set<string>();
-    favoriteGroups.forEach((group) => {
-      (group.items || []).forEach((item) => {
-        allPinIds.add(item.pinId);
-      });
-    });
+    // favoritePins를 단일 그룹으로 변환
+    return [
+      {
+        id: "default-group",
+        title: "즐겨찾기",
+        sortOrder: 0,
+        itemCount: favoritePins.length,
+        items: favoritePins.map((pin, index) => ({
+          itemId: `item-${pin.id}`,
+          pinId: pin.id,
+          sortOrder: index,
+          createdAt: new Date().toISOString(),
+          pinName: pin.name || `Pin ${pin.id}`,
+        })),
+      },
+    ];
+  }, [favoritePins]);
 
-    // 병렬로 핀 정보 가져오기
-    const loadPinNames = async () => {
-      const namesMap = new Map<string, string>();
-      await Promise.all(
-        Array.from(allPinIds).map(async (pinId) => {
-          try {
-            const pin = await getPinRaw(pinId);
-            const pinName = pin.name || pin.badge || `Pin ${pinId}`;
-            namesMap.set(pinId, pinName);
-          } catch (error) {
-            console.error(`핀 ${pinId} 정보 가져오기 실패:`, error);
-            namesMap.set(pinId, `Pin ${pinId}`);
-          }
-        })
-      );
-      setPinNamesMap(namesMap);
-    };
-
-    loadPinNames();
-  }, [favoriteGroups]);
-
-  // 매물 이름이 포함된 그룹 데이터 생성
-  const groupsWithPinNames = useMemo(() => {
-    if (!favoriteGroups) return [];
-    return favoriteGroups.map((group) => ({
-      ...group,
-      items: group.items?.map((item) => ({
-        ...item,
-        pinName: pinNamesMap.get(item.pinId) || `Pin ${item.pinId}`,
-      })),
-    }));
-  }, [favoriteGroups, pinNamesMap]);
+  const isLoading = false;
+  const error = null;
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
@@ -108,7 +78,7 @@ export function AccountFavoritesModal({
 
           {!isLoading && !error && (
             <>
-              {!favoriteGroups || favoriteGroups.length === 0 ? (
+              {groupsWithPinNames.length === 0 ? (
                 <div className="text-center text-gray-500 py-8">
                   등록된 즐겨찾기가 없습니다.
                 </div>

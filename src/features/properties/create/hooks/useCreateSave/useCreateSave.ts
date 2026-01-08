@@ -167,7 +167,7 @@ export function useCreateSave({
       // 가격/면적 검증은 입력된 값이 있을 때만 체크 (옵셔널)
       const unitLinesArray = Array.isArray(f.unitLines) ? f.unitLines : [];
       if (unitLinesArray.length > 0) {
-        const priceError = validateUnitPriceRanges(unitLinesArray as any[]);
+        const priceError = validateUnitPriceRanges(unitLinesArray as any[], f.remainingHouseholds);
         if (priceError) {
           alert(priceError);
           return;
@@ -196,7 +196,8 @@ export function useCreateSave({
       if (hasAnyAreaInput) {
         const areaError = validateAreaSets(
           f.baseAreaSet,
-          extraAreaSetsArray
+          extraAreaSetsArray,
+          f.remainingHouseholds
         );
         if (areaError) {
           alert(areaError);

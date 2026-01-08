@@ -37,6 +37,8 @@ export function useContextMenuPanelLogic(props: ContextMenuPanelProps) {
     isVisitReservedPin,
     isAlreadyReserved,
     isReservedByOtherAccount,
+    assigneeName,
+    onCancelReservation,
     onClose,
     onView,
     onCreate,
@@ -356,6 +358,8 @@ export function useContextMenuPanelLogic(props: ContextMenuPanelProps) {
     canView,
     isAlreadyReserved,
     isReservedByOtherAccount,
+    assigneeName,
+    onCancelReservation,
 
     // 핸들러
     stopAll,

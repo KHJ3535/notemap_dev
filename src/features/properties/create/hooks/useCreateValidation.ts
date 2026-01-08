@@ -149,17 +149,29 @@ export const numOrNull = (v: any): number | null => {
   return Number.isFinite(n) ? n : null;
 };
 
-/** min/max가 모두 채워졌을 때만 비교. 단, 0은 단독으로도 금지 */
-export const isInvalidRange = (min: any, max: any) => {
+/** min/max가 모두 채워졌을 때만 비교. 단, 0은 단독으로도 금지
+ * 잔여세대가 1일 때는 최소값=최대값을 허용 */
+export const isInvalidRange = (min: any, max: any, remainingHouseholds?: number | string | null) => {
   const a = numOrNull(min);
   const b = numOrNull(max);
   if (a === 0 || b === 0) return true;
-  if (a != null && b != null) return b <= a;
+  if (a != null && b != null) {
+    // 잔여세대가 1일 때는 최소값=최대값 허용
+    const remaining = numOrNull(remainingHouseholds);
+    if (remaining === 1) {
+      return b < a; // 최대값이 최소값보다 작은 경우만 에러
+    }
+    return b <= a;
+  }
   return false;
 };
 
-/** 구조별 최소/최대 매매가 검증 */
-export const validateUnitPriceRanges = (units?: any[]): string | null => {
+/** 구조별 최소/최대 매매가 검증
+ * 잔여세대가 1일 때는 최소값=최대값을 허용 */
+export const validateUnitPriceRanges = (
+  units?: any[],
+  remainingHouseholds?: number | string | null
+): string | null => {
   if (!Array.isArray(units)) return null;
 
   const priceOrNull = (v: any): number | null => {
@@ -168,6 +180,9 @@ export const validateUnitPriceRanges = (units?: any[]): string | null => {
     const n = Number(s.replace(/[^\d.-]/g, ""));
     return Number.isFinite(n) ? n : null;
   };
+
+  const remaining = numOrNull(remainingHouseholds);
+  const allowEqual = remaining === 1; // 잔여세대가 1일 때 최소값=최대값 허용
 
   for (let i = 0; i < units.length; i++) {
     const u = units[i] ?? {};
@@ -184,18 +199,31 @@ export const validateUnitPriceRanges = (units?: any[]): string | null => {
       return `${label}: 0원은 입력할 수 없습니다.`;
     }
 
-    if (max <= min) {
-      return `${label}: 최대매매가는 최소매매가보다 커야 합니다.`;
+    if (allowEqual) {
+      // 잔여세대가 1일 때는 최소값=최대값 허용, 최대값이 최소값보다 작은 경우만 에러
+      if (max < min) {
+        return `${label}: 최대매매가는 최소매매가보다 크거나 같아야 합니다.`;
+      }
+    } else {
+      // 일반적인 경우: 최대값이 최소값보다 커야 함
+      if (max <= min) {
+        return `${label}: 최대매매가는 최소매매가보다 커야 합니다.`;
+      }
     }
   }
   return null;
 };
 
-/** 개별 평수 입력(전용/실평) 검증 */
+/** 개별 평수 입력(전용/실평) 검증
+ * 잔여세대가 1일 때는 최소값=최대값을 허용 */
 export const validateAreaSets = (
   base: LooseAreaSet,
-  extras: LooseAreaSet[]
+  extras: LooseAreaSet[],
+  remainingHouseholds?: number | string | null
 ): string | null => {
+  const remaining = numOrNull(remainingHouseholds);
+  const allowEqual = remaining === 1; // 잔여세대가 1일 때 최소값=최대값 허용
+
   const checkOne = (set: any, titleForMsg: string) => {
     const pairs: Array<[any, any, string]> = [
       [set?.exMinM2, set?.exMaxM2, "전용(㎡)"],
@@ -212,8 +240,12 @@ export const validateAreaSets = (
       }
     }
     for (const [a, b, label] of pairs) {
-      if (isInvalidRange(a, b)) {
-        return `${titleForMsg} - ${label}: 최대값은 최소값보다 커야 합니다.`;
+      if (isInvalidRange(a, b, remainingHouseholds)) {
+        if (allowEqual) {
+          return `${titleForMsg} - ${label}: 최대값은 최소값보다 크거나 같아야 합니다.`;
+        } else {
+          return `${titleForMsg} - ${label}: 최대값은 최소값보다 커야 합니다.`;
+        }
       }
     }
     return null;

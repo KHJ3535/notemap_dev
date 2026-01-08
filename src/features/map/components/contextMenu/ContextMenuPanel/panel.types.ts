@@ -71,6 +71,12 @@ export type ContextMenuPanelProps = {
   isAlreadyReserved?: boolean;
   /** 다른 계정에서 예약한 핀인지 여부 (reserved 상태일 때 매물 정보 입력 버튼 비활성화용) */
   isReservedByOtherAccount?: boolean;
+  /** 예약자 이름 (예약된 핀인 경우에만 표시) */
+  assigneeName?: string | null;
+  /** 예약 ID (취소 기능용) */
+  reservationId?: string | null;
+  /** 예약 취소 핸들러 (내 예약인 경우에만 전달) */
+  onCancelReservation?: () => void;
 
   /** 즐겨찾기 UI */
   showFav?: boolean;

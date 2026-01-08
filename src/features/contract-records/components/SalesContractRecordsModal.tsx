@@ -30,7 +30,10 @@ import {
   updateContract,
   deleteContract,
 } from "../api/contracts";
-import { transformSalesContractToCreateRequest, transformSalesContractToUpdateRequest } from "../utils/contractTransformers";
+import {
+  transformSalesContractToCreateRequest,
+  transformSalesContractToUpdateRequest,
+} from "../utils/contractTransformers";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { getProfile } from "@/features/users/api/account";
@@ -401,7 +404,10 @@ export function SalesContractRecordsModal({
       if (data.id) {
         // 수정 모드
         const contractId = Number(data.id);
-        const updateRequest = transformSalesContractToUpdateRequest(data, profile);
+        const updateRequest = transformSalesContractToUpdateRequest(
+          data,
+          profile
+        );
         console.log("변환된 수정 요청 데이터:", updateRequest);
         const result = await updateContract(contractId, updateRequest);
         console.log("계약 수정 API 응답:", result);
@@ -421,7 +427,10 @@ export function SalesContractRecordsModal({
       } else {
         // 생성 모드
         // 백엔드 API 형식으로 변환
-        const requestData = transformSalesContractToCreateRequest(data, profile);
+        const requestData = transformSalesContractToCreateRequest(
+          data,
+          profile
+        );
         console.log("변환된 요청 데이터:", requestData);
 
         // 필수 필드 검증 (타입 체크)
@@ -465,16 +474,21 @@ export function SalesContractRecordsModal({
       console.error("계약 저장 실패:", error);
       const errorMessages = error?.response?.data?.messages;
       const errorMessage = error?.response?.data?.message;
-      let errorDescription = errorMessage || 
+      let errorDescription =
+        errorMessage ||
         (data.id
           ? "계약 수정 중 오류가 발생했습니다."
           : "계약 생성 중 오류가 발생했습니다.");
-      
+
       // validation 에러 메시지가 있으면 추가
-      if (errorMessages && Array.isArray(errorMessages) && errorMessages.length > 0) {
+      if (
+        errorMessages &&
+        Array.isArray(errorMessages) &&
+        errorMessages.length > 0
+      ) {
         errorDescription = errorMessages.join(", ");
       }
-      
+
       toast({
         title: data.id ? "계약 수정 실패" : "계약 생성 실패",
         description: errorDescription,
@@ -493,9 +507,19 @@ export function SalesContractRecordsModal({
       >
         {/* 고정 헤더 */}
         <DialogHeader className="pb-1 flex-shrink-0 p-4 border-b">
-          <DialogTitle className="text-lg font-bold">
-            영업 계약기록 관리
-          </DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="text-lg font-bold">
+              영업 계약기록 관리
+            </DialogTitle>
+            {data.contractNumber && (
+              <div className="text-sm text-muted-foreground mr-8">
+                계약번호:{" "}
+                <span className="font-medium text-foreground">
+                  {data.contractNumber}
+                </span>
+              </div>
+            )}
+          </div>
         </DialogHeader>
 
         {/* 스크롤 가능한 콘텐츠 영역 */}

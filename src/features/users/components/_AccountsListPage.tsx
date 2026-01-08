@@ -183,17 +183,21 @@ export default function AccountsListPage({
                     )}
                   </td>
                   <td className="px-4 py-3 text-center">
-                    <button
-                      className="inline-flex items-center gap-1 rounded-md border px-3 py-1.5 text-xs text-red-600 hover:bg-red-50"
-                      onClick={() => {
-                        if (confirm("해당 계정을 삭제하시겠습니까?"))
-                          onRemove(u.id);
-                      }}
-                      title="삭제"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      삭제
-                    </button>
+                    {u.role === "admin" ? (
+                      <span className="text-muted-foreground text-xs">-</span>
+                    ) : (
+                      <button
+                        className="inline-flex items-center gap-1 rounded-md border px-3 py-1.5 text-xs text-red-600 hover:bg-red-50"
+                        onClick={() => {
+                          if (confirm("해당 계정을 삭제하시겠습니까?"))
+                            onRemove(u.id);
+                        }}
+                        title="삭제"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        삭제
+                      </button>
+                    )}
                   </td>
                 </tr>
               );

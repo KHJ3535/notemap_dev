@@ -7,6 +7,7 @@ import { usePlanReserve } from "./hooks/usePlanReserve";
 import ContextMenuPanel from "../ContextMenuPanel/ContextMenuPanel";
 import { PinContextMenuProps } from "./PinContextMenuContainer.types";
 import { useScheduledReservations } from "@/features/survey-reservations/hooks/useScheduledReservations";
+import { useCancelReservation } from "@/features/survey-reservations/hooks/useCancelReservation";
 import CustomOverlay from "../../../shared/CustomOverlay/CustomOverlay";
 import { useDeletePropertyFromMenu } from "./hooks/useDeletePropertyFromMenu";
 import { MergedMarker } from "@/features/map/pages/hooks/useMergedMarkers";
@@ -68,8 +69,15 @@ export default function PinContextMenuContainer(props: Props) {
 
   const {
     items: scheduledReservations,
+    setItems: setScheduledReservations,
     refetch: refetchScheduledReservations,
   } = useScheduledReservations();
+
+  const { onCancel } = useCancelReservation(
+    scheduledReservations,
+    setScheduledReservations,
+    () => refetchScheduledReservations()
+  );
 
   const handleView = () => {
     const id = String(propertyId ?? "");
@@ -319,6 +327,14 @@ export default function PinContextMenuContainer(props: Props) {
   /** 다른 계정에서 예약한 핀인지 (답사지 등록 버튼 비활성화용) */
   const isReservedByOtherAccount = isAlreadyReserved && !isMyReservation;
 
+  /** 예약자 이름 추출 */
+  const assigneeName = reservationForThisDraft?.assigneeName ?? null;
+
+  /** 예약 ID 추출 (취소 기능용) */
+  const reservationId = reservationForThisDraft?.id
+    ? String(reservationForThisDraft.id)
+    : null;
+
   /** draft 메타일 때만 제목으로 사용 */
   const metaTitle = useMemo(() => {
     if (!metaAtPos) return undefined;
@@ -499,6 +515,9 @@ export default function PinContextMenuContainer(props: Props) {
               isVisitReservedPin={reserved}
               isAlreadyReserved={isReservedByOtherAccount}
               isReservedByOtherAccount={isReservedByOtherAccountAtPos}
+              assigneeName={assigneeName}
+              reservationId={reservationId}
+              onCancelReservation={isMyReservation && reservationId ? () => onCancel(reservationId) : undefined}
               showFav={listed}
               onAddFav={onAddFav}
               favActive={favActive}
