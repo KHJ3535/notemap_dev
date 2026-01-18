@@ -150,12 +150,30 @@ function normalizeAreaGroup(s?: AreaSet): CreatePinAreaGroupDto | null {
   const acLo = Math.min(realMin, realMax);
   const acHi = Math.max(realMin, realMax);
 
+  // 개별 평수 정규화 (units 필드가 있는 경우)
+  const units: Array<{ exclusiveM2?: number | null; realM2?: number | null }> | null =
+    Array.isArray((s as any).units) && (s as any).units.length > 0
+      ? (s as any).units
+          .map((u: any) => {
+            const exM2 = toNum(u?.exclusiveM2);
+            const reM2 = toNum(u?.realM2);
+            // 둘 다 없으면 제외
+            if (exM2 === undefined && reM2 === undefined) return null;
+            return {
+              exclusiveM2: exM2 ?? null,
+              realM2: reM2 ?? null,
+            };
+          })
+          .filter((u: any): u is { exclusiveM2?: number | null; realM2?: number | null } => u !== null)
+      : null;
+
   return {
     title,
     exclusiveMinM2: Math.max(0, exLo),
     exclusiveMaxM2: Math.max(0, exHi),
     actualMinM2: Math.max(0, acLo),
     actualMaxM2: Math.max(0, acHi),
+    ...(units && units.length > 0 ? { units } : {}),
   };
 }
 

@@ -218,7 +218,7 @@ export function sanitizeAreaGroups(
     const exMin = Number(g.exclusiveMinM2);
     const exMax = Number(g.exclusiveMaxM2);
     if (!Number.isFinite(exMin) || !Number.isFinite(exMax)) return;
-    if (exMin > exMax) return; // 역전 방지
+    if (exMin > exMax) return; // 역전 방지 (같은 값 허용)
 
     // ▶ 실제(㎡) — 필수 스펙: 없으면 전용값으로 대체
     const hasActMin =
@@ -229,7 +229,7 @@ export function sanitizeAreaGroups(
     const actMin = hasActMin ? Number(g.actualMinM2) : exMin;
     const actMax = hasActMax ? Number(g.actualMaxM2) : exMax;
 
-    if (actMin > actMax) return; // 역전 방지
+    if (actMin > actMax) return; // 역전 방지 (같은 값 허용)
 
     out.push({
       title: title.slice(0, 50),

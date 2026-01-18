@@ -51,15 +51,12 @@ const priceOrNull = (v: any): number | null => {
 };
 
 /** 배열을 훑어보고, 위반 있으면 에러 메시지 반환(없으면 null)
- * 잔여세대가 1일 때는 최소값=최대값을 허용 */
+ * 최소값=최대값 허용 */
 export const validateUnitPriceRanges = (
   units?: any[],
   remainingHouseholds?: number | string | null
 ): string | null => {
   if (!Array.isArray(units)) return null;
-
-  const remaining = numOrNull(remainingHouseholds);
-  const allowEqual = remaining === 1; // 잔여세대가 1일 때 최소값=최대값 허용
 
   for (let i = 0; i < units.length; i++) {
     const u = units[i] ?? {};
@@ -73,13 +70,9 @@ export const validateUnitPriceRanges = (
       return `${label}: 0원은 입력할 수 없습니다.`;
     }
     if (min != null && max != null) {
-      if (!allowEqual && max === min) {
-        return `${label}: 최소·최대 매매가가 같을 수 없습니다.`;
-      }
+      // 최대값이 최소값보다 작은 경우만 에러 (같은 값 허용)
       if (max < min) {
-        return `${label}: 최대매매가는 최소매매가보다 ${
-          allowEqual ? "크거나 " : ""
-        }커야 합니다.`;
+        return `${label}: 최대매매가는 최소매매가보다 크거나 같아야 합니다.`;
       }
     }
   }
@@ -111,37 +104,30 @@ const checkRange = (
   }
   if (min == null || max == null) return { ok: true };
 
-  if (!allowEqual && max === min) {
-    return { ok: false, msg: `${label}: 최소와 최대가 같을 수 없습니다.` };
-  }
+  // 최대값이 최소값보다 작은 경우만 에러 (같은 값 허용)
   if (max < min) {
     return {
       ok: false,
-      msg: `${label}: 최대는 최소보다 ${
-        allowEqual ? "크거나 " : ""
-      }커야 합니다.`,
+      msg: `${label}: 최대는 최소보다 크거나 같아야 합니다.`,
     };
   }
   return { ok: true };
 };
 
 /** baseAreaSet + extraAreaSets 전체 검사. 문제가 없으면 null
- * 잔여세대가 1일 때는 최소값=최대값을 허용 */
+ * 최소값=최대값 허용 */
 export const validateAreaRanges = (
   base?: any,
   extras?: any[],
   remainingHouseholds?: number | string | null
 ): string | null => {
-  const remaining = numOrNull(remainingHouseholds);
-  const allowEqual = remaining === 1; // 잔여세대가 1일 때 최소값=최대값 허용
-
   const checks = (g: any, prefix = ""): string | null => {
     {
       const r = checkRange(
         g?.exMinM2 ?? g?.exclusiveMin,
         g?.exMaxM2 ?? g?.exclusiveMax,
         `${prefix}전용 m²`,
-        allowEqual
+        true
       );
       if (!r.ok) return r.msg;
     }
@@ -150,7 +136,7 @@ export const validateAreaRanges = (
         g?.exMinPy ?? g?.exclusiveMinPy,
         g?.exMaxPy ?? g?.exclusiveMaxPy,
         `${prefix}전용 평`,
-        allowEqual
+        true
       );
       if (!r.ok) return r.msg;
     }
@@ -159,7 +145,7 @@ export const validateAreaRanges = (
         g?.realMinM2 ?? g?.realMin,
         g?.realMaxM2 ?? g?.realMax,
         `${prefix}실평 m²`,
-        allowEqual
+        true
       );
       if (!r.ok) return r.msg;
     }
@@ -168,7 +154,7 @@ export const validateAreaRanges = (
         g?.realMinPy,
         g?.realMaxPy,
         `${prefix}실평 평`,
-        allowEqual
+        true
       );
       if (!r.ok) return r.msg;
     }
