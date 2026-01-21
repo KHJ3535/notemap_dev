@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import type React from "react";
 
 import type { PropertyViewDetails } from "../../types";
@@ -29,6 +29,9 @@ import ViewActionsBar from "../parts/ViewActionsBar";
 import AreaSetsViewContainer from "../containers/AreaSetsViewContainer";
 import AspectsViewContainer from "../containers/AspectsViewContainer";
 import { useMe } from "@/shared/api/auth/auth";
+import { getFavoriteGroups, upsertFavoriteItem, deleteFavoriteItem } from "@/features/favorites/api/favorites";
+import FavGroupModal from "@/features/sidebar/components/FavGroupModal";
+import type { FavorateListItem } from "@/features/sidebar/types/sidebar";
 
 /* 지도 이벤트만 막고 기본 클릭은 그대로 두기 */
 function eat(e: any) {
@@ -81,6 +84,154 @@ export default function ViewStage({
   // ✅ 삭제 버튼 노출 권한: 부장 / 팀장만
   const role = me?.role;
   const canDelete = ["admin", "manager"].includes(role ?? "");
+
+  // ✅ 즐겨찾기 관련 상태
+  const [favoriteGroups, setFavoriteGroups] = useState<FavorateListItem[]>([]);
+  const [favModalOpen, setFavModalOpen] = useState(false);
+  const [favoriteIndex, setFavoriteIndex] = useState<Record<string, { groupId: string; itemId: string }>>({});
+  const favoriteIndexRef = useRef<Record<string, { groupId: string; itemId: string }>>({});
+  const pinId = useMemo(() => String(data?.id ?? "").trim(), [data?.id]);
+  const isFavorited = useMemo(() => {
+    return !!favoriteIndexRef.current[pinId];
+  }, [pinId, favoriteIndex]);
+
+  // 즐겨찾기 그룹 목록 로드
+  const loadFavorites = useCallback(async () => {
+    try {
+      const groups = await getFavoriteGroups(true);
+      const index: Record<string, { groupId: string; itemId: string }> = {};
+      
+      groups.forEach((group) => {
+        (group.items || []).forEach((item) => {
+          index[item.pinId] = { groupId: group.id, itemId: item.itemId };
+        });
+      });
+
+      favoriteIndexRef.current = index;
+      setFavoriteIndex(index);
+
+      const convertedGroups: FavorateListItem[] = groups.map((group) => ({
+        id: group.id,
+        title: group.title,
+        subItems: (group.items || []).map((item) => ({
+          id: item.itemId,
+          title: `Pin ${item.pinId}`,
+          pinId: item.pinId,
+        })),
+      }));
+      setFavoriteGroups(convertedGroups);
+    } catch (error: any) {
+      console.error("즐겨찾기 목록 로드 실패:", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadFavorites();
+  }, [loadFavorites]);
+
+  // 즐겨찾기 토글
+  const handleToggleFavorite = useCallback(async () => {
+    if (!pinId || !/^\d+$/.test(pinId)) {
+      toast({
+        title: "즐겨찾기 추가 불가",
+        description: "등록된 매물만 즐겨찾기에 추가할 수 있습니다.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const alreadyFav = favoriteIndexRef.current[pinId];
+    if (alreadyFav) {
+      try {
+        await deleteFavoriteItem(alreadyFav.groupId, alreadyFav.itemId);
+        await loadFavorites();
+        toast({
+          title: "즐겨찾기 삭제 완료",
+          description: "즐겨찾기에서 삭제되었습니다.",
+        });
+      } catch (error: any) {
+        console.error("즐겨찾기 삭제 실패:", error);
+        toast({
+          title: "즐겨찾기 삭제 실패",
+          description: "즐겨찾기 삭제 중 오류가 발생했습니다.",
+          variant: "destructive",
+        });
+      }
+      return;
+    }
+
+    setFavModalOpen(true);
+  }, [pinId, loadFavorites, toast]);
+
+  // 즐겨찾기 그룹 선택
+  const handleSelectGroup = useCallback(
+    async (groupId: string) => {
+      if (!pinId || !/^\d+$/.test(pinId)) {
+        toast({
+          title: "즐겨찾기 추가 불가",
+          description: "등록된 매물만 즐겨찾기에 추가할 수 있습니다.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      try {
+        await upsertFavoriteItem({
+          groupId: groupId,
+          pinId: pinId,
+        });
+        await loadFavorites();
+        toast({
+          title: "즐겨찾기 추가 완료",
+          description: `${data?.title || "매물"}이(가) 즐겨찾기에 추가되었습니다.`,
+        });
+        setFavModalOpen(false);
+      } catch (error: any) {
+        console.error("즐겨찾기 추가 실패:", error);
+        toast({
+          title: "즐겨찾기 추가 실패",
+          description: "즐겨찾기 추가 중 오류가 발생했습니다.",
+          variant: "destructive",
+        });
+      }
+    },
+    [pinId, data?.title, loadFavorites, toast]
+  );
+
+  // 새 그룹 생성 및 추가
+  const handleCreateAndSelect = useCallback(
+    async (groupId: string) => {
+      if (!pinId || !/^\d+$/.test(pinId)) {
+        toast({
+          title: "즐겨찾기 추가 불가",
+          description: "등록된 매물만 즐겨찾기에 추가할 수 있습니다.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      try {
+        await upsertFavoriteItem({
+          title: groupId,
+          pinId: pinId,
+        });
+        await loadFavorites();
+        toast({
+          title: "즐겨찾기 추가 완료",
+          description: `${data?.title || "매물"}이(가) 즐겨찾기에 추가되었습니다.`,
+        });
+        setFavModalOpen(false);
+      } catch (error: any) {
+        console.error("즐겨찾기 추가 실패:", error);
+        toast({
+          title: "즐겨찾기 추가 실패",
+          description: "즐겨찾기 추가 중 오류가 발생했습니다.",
+          variant: "destructive",
+        });
+      }
+    },
+    [pinId, data?.title, loadFavorites, toast]
+  );
 
   const hasData = !!data;
   const formInput = useMemo(
@@ -408,6 +559,17 @@ export default function ViewStage({
             onClickEdit={handleClickEdit}
             onDelete={onDelete}
             onClose={onClose}
+            showFavorite={!!pinId && /^\d+$/.test(pinId)}
+            isFavorited={isFavorited}
+            onToggleFavorite={handleToggleFavorite}
+          />
+
+          <FavGroupModal
+            open={favModalOpen}
+            onClose={() => setFavModalOpen(false)}
+            groups={favoriteGroups}
+            onSelectGroup={handleSelectGroup}
+            onCreateAndSelect={handleCreateAndSelect}
           />
         </>
       ) : (

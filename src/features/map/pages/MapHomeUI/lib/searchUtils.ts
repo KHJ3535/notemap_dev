@@ -185,12 +185,14 @@ export function toServerDraftsFromDrafts(
   drafts: NonNullable<PinSearchResult["drafts"]>
 ) {
   return drafts.map((d) => {
-    const label = (d.title ?? "답사예정").trim();
+    const name = (d.name ?? "").trim();
+    const title = (d.title ?? "").trim();
+    const label = name || title || "답사예정";
 
     return {
       id: d.id,
       name: label,
-      title: label,
+      title: title || label,
       lat: d.lat,
       lng: d.lng,
       draftState: (d as any).draftState,

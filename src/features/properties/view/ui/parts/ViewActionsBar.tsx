@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/cn";
-import { Trash2, Pencil } from "lucide-react";
+import { Trash2, Pencil, Star } from "lucide-react";
 
 type Props = {
   showEditButton: boolean;
@@ -11,6 +11,9 @@ type Props = {
   onClickEdit: () => void;
   onDelete: () => void;
   onClose: () => void;
+  showFavorite?: boolean;
+  isFavorited?: boolean;
+  onToggleFavorite?: () => void;
 };
 
 export default function ViewActionsBar({
@@ -21,6 +24,9 @@ export default function ViewActionsBar({
   onClickEdit,
   onDelete,
   onClose,
+  showFavorite = false,
+  isFavorited = false,
+  onToggleFavorite,
 }: Props) {
   return (
     <div className="md:static">
@@ -47,6 +53,32 @@ export default function ViewActionsBar({
             >
               <Pencil className="h-4 w-4" />
               수정
+            </button>
+          )}
+
+          {/* 즐겨찾기 버튼 */}
+          {showFavorite && onToggleFavorite && (
+            <button
+              type="button"
+              onClick={onToggleFavorite}
+              className={cn(
+                "inline-flex items-center gap-2 rounded-md border px-3 h-9",
+                isFavorited
+                  ? "border-yellow-300 text-yellow-700 hover:bg-yellow-50"
+                  : "text-gray-700 hover:bg-gray-50"
+              )}
+              aria-label="즐겨찾기"
+              title="즐겨찾기"
+            >
+              <Star
+                className={cn(
+                  "h-4 w-4",
+                  isFavorited
+                    ? "fill-yellow-500 text-yellow-500"
+                    : "fill-none text-gray-400"
+                )}
+              />
+              즐겨찾기
             </button>
           )}
 

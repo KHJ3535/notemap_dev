@@ -73,12 +73,20 @@ export function useMarkersForMapHome({
     });
 
     // 5) 임시핀 마커 변환 (__visit__ 접두사)
-    const draftMarkers: MapMarkerWithFav[] = visibleDrafts.map((d: any) => ({
-      id: `__visit__${d.id}`,
-      position: { lat: d.lat, lng: d.lng },
-      kind: "question" as const,
-      isFav: false,
-    }));
+    const draftMarkers: MapMarkerWithFav[] = visibleDrafts.map((d: any) => {
+      const name = (d.name ?? "").trim();
+      const title = (d.title ?? "").trim();
+      const displayName = name || title || "답사예정";
+      
+      return {
+        id: `__visit__${d.id}`,
+        position: { lat: d.lat, lng: d.lng },
+        kind: "question" as const,
+        name: displayName,
+        title: title || displayName,
+        isFav: false,
+      };
+    });
 
     // ✅ 최종 리턴
     return [...pointMarkers, ...draftMarkers];

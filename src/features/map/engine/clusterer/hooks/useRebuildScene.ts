@@ -163,13 +163,14 @@ export function useRebuildScene(args: Args) {
           "";
 
         const planText = `${m.regionLabel ?? ""} 답사예정`.trim();
+        const planDisplayName = displayName || planText;
 
         // ── marker 생성 ──────────────────────────────
         const mk = createMarker(kakao, pos, {
           isDraft,
           key,
           kind: (m.kind ?? defaultPinKind) as PinKind,
-          title: isPlan ? planText : displayName,
+          title: isPlan ? planDisplayName : displayName,
         });
         markerObjsRef.current[key] = mk;
 

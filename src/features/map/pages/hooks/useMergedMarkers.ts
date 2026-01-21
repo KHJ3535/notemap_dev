@@ -57,6 +57,7 @@ export function useMergedMarkers(params: {
   }>;
   serverDrafts?: Array<{
     id: string | number;
+    name?: string | null;
     title?: string | null;
     lat: number;
     lng: number;
@@ -117,11 +118,13 @@ export function useMergedMarkers(params: {
     });
 
     const drafts: MergedMarker[] = effectiveDrafts.map((d) => {
-      const title = (d.title ?? "답사예정").trim();
+      const name = (d.name ?? "").trim();
+      const title = (d.title ?? "").trim();
+      const displayName = name || title || "답사예정";
       return {
         id: d.id,
-        name: title,
-        title,
+        name: displayName,
+        title: title || displayName,
         lat: d.lat,
         lng: d.lng,
         source: "draft",
@@ -180,12 +183,14 @@ export function useMergedMarkers(params: {
       const fallback: PinKind = "question";
       const kind: PinKind = (kindFromBadge ?? fallback) as PinKind;
 
-      const label = (d.title ?? "답사예정").trim();
+      const name = (d.name ?? "").trim();
+      const title = (d.title ?? "").trim();
+      const label = name || title || "답사예정";
 
       return {
         id: `__visit__${String(d.id)}`,
         name: label,
-        title: label,
+        title: title || label,
         position: { lat: d.lat, lng: d.lng },
         kind,
       };

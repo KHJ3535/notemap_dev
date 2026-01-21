@@ -35,6 +35,8 @@ type TopRegionProps = {
 
   roadviewRoadOn: boolean;
   onToggleRoadviewRoad: () => void;
+
+  onMoveToCurrentLocation?: () => void;
 };
 
 export const TopRegion = forwardRef<HTMLDivElement, TopRegionProps>(
@@ -59,6 +61,7 @@ export const TopRegion = forwardRef<HTMLDivElement, TopRegionProps>(
       getLevel,
       roadviewRoadOn,
       onToggleRoadviewRoad,
+      onMoveToCurrentLocation,
     },
     rightAreaRef
   ) => {
@@ -110,6 +113,7 @@ export const TopRegion = forwardRef<HTMLDivElement, TopRegionProps>(
               getLevel={getLevel}
               roadviewRoadOn={roadviewRoadOn}
               onToggleRoadviewRoad={onToggleRoadviewRoad}
+              onMoveToCurrentLocation={onMoveToCurrentLocation}
             />
           </div>
         </div>

@@ -427,6 +427,37 @@ export function MapHomeUI(props: MapHomeUIProps) {
         getLevel={() => mapInstance?.getLevel?.()}
         roadviewRoadOn={roadviewRoadOn}
         onToggleRoadviewRoad={toggleRoadviewRoad}
+        onMoveToCurrentLocation={useCallback(() => {
+          if (!kakaoSDK || !mapInstance || !("geolocation" in navigator)) {
+            return;
+          }
+
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              const { latitude, longitude } = pos.coords;
+              const next = new kakaoSDK.maps.LatLng(latitude, longitude);
+              const cur = mapInstance.getCenter?.();
+
+              if (
+                !cur ||
+                cur.getLat() !== next.getLat() ||
+                cur.getLng() !== next.getLng()
+              ) {
+                mapInstance.setCenter(next);
+                const safeLevel = 4;
+                mapInstance.setLevel(safeLevel);
+              }
+            },
+            (err) => {
+              console.warn("[MapHomeUI] 현재 위치 가져오기 실패:", err);
+            },
+            {
+              enableHighAccuracy: false,
+              timeout: 5000,
+              maximumAge: 60_000,
+            }
+          );
+        }, [kakaoSDK, mapInstance])}
       />
 
       {/* 필터 플로팅 버튼 + 필터 검색 패널 영역 */}

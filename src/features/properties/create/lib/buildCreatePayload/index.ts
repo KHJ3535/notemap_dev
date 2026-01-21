@@ -159,7 +159,7 @@ export function buildCreatePayload(args: BuildArgs) {
   const rebateTextSafe = s(rebateText);
 
   // ─────────────────────────────────────────────
-  // ✅ 서버 전송용 units: 구조별 최소/최대 매매가 + 복층/테라스 반영
+  // 서버 전송용 units: 구조별 최소/최대 매매가 + 복층/테라스 반영
   // ─────────────────────────────────────────────
   const unitsBase = normalizeUnits(unitLines);
   const unitsForServer = unitsBase.map((u: any, idx: number) => {
@@ -195,13 +195,13 @@ export function buildCreatePayload(args: BuildArgs) {
     };
   });
 
-  // ✅ 옵션: 배열만 받아서 서버 DTO(CreatePinOptionsDto)에 맞게 변환
+  // 옵션: 배열만 받아서 서버 DTO(CreatePinOptionsDto)에 맞게 변환
   //    - buildOptionsForServer 내부에서 extraOptionsText까지 구성
   const optionsForServerBase = buildOptionsForServer(options ?? []);
   
   const optionsForServer: any = {
     ...optionsForServerBase,
-    // ✅ Nullable Enum 4개 (별도 관리)
+    // Nullable Enum 4개 (별도 관리)
     kitchenLayout: kitchenLayout ?? null,
     fridgeSlot: fridgeSlot ?? null,
     sofaSize: sofaSize ?? null,
@@ -334,7 +334,7 @@ export function buildCreatePayload(args: BuildArgs) {
     slopeGrade,
     structureGrade,
 
-    // ✅ 서버용 옵션 DTO (hasAircon... + extraOptionsText 포함)
+    // 서버용 옵션 DTO (hasAircon... + extraOptionsText 포함)
     options: optionsForServer,
 
     publicMemo,
@@ -345,7 +345,7 @@ export function buildCreatePayload(args: BuildArgs) {
     // UI 보존용
     unitLines,
 
-    // ✅ 서버 전송용(항상 포함)
+    //  서버 전송용(항상 포함)
     units: unitsForServer,
 
     /* 이미지/파일 */

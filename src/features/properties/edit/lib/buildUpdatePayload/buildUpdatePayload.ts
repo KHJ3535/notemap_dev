@@ -554,7 +554,7 @@ export function buildUpdatePayload(
   const currAreaGroups = normalizeAreaGroupsForCompare(currAreaGroupsRaw);
   const prevAreaGroups = normalizeAreaGroupsForCompare(prevAreaGroupsRaw);
 
-  // ✅ 규칙:
+  // 규칙:
   //  - 초기값이 없는 신규 생성(initial === undefined) 이면 값이 있으면 areaGroups 보냄
   //  - 수정(initial 존재)에서는 "실제 면적 범위 입력을 건드렸을 때(explicitRangeTouched)"만 areaGroups 전송
   if (initial === undefined) {

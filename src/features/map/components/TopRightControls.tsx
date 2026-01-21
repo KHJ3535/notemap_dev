@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useCallback } from "react";
+import { LocateFixed } from "lucide-react";
+import { Button } from "@/components/atoms/Button/Button";
 import ToggleSidebar from "./ToggleSidebar/ToggleSidebar";
 import { usePlannedDrafts } from "../hooks/pins/usePlannedDrafts";
 import { useMemoViewMode } from "@/features/properties/view/store/useMemoViewMode";
@@ -52,6 +54,9 @@ export default function TopRightControls(props: {
   /** 🔵 로드뷰 도로(파란 라인) 토글 상태 & 핸들러 */
   roadviewRoadOn: boolean;
   onToggleRoadviewRoad: () => void;
+
+  /** 현위치로 이동 핸들러 */
+  onMoveToCurrentLocation?: () => void;
 }) {
   const stop = (e: any) => {
     e.stopPropagation?.();
@@ -212,6 +217,24 @@ export default function TopRightControls(props: {
             K&N
           </button>
         </div>
+
+        {/* 현위치로 이동 버튼 - 필터 왼쪽 */}
+        {props.onMoveToCurrentLocation && (
+          <div className="relative z-[2] shrink-0">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={props.onMoveToCurrentLocation}
+              onMouseDown={(e) => e.stopPropagation()}
+              className="h-10 w-10 rounded-xl"
+              aria-label="현위치로 이동"
+              title="현위치로 이동"
+            >
+              <LocateFixed className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
 
         {/* 🔵 지도 메뉴 (등록/답사/임시핀 등 필터) - 가운데 */}
         <div className="relative z-[2] shrink-0">
