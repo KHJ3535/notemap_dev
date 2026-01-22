@@ -67,6 +67,7 @@ export default function ModalsHost(props: {
   /** Roadview */
   roadviewVisible: boolean;
   roadviewContainerRef: any;
+  roadviewRef: any;
   onCloseRoadview: () => void;
 }) {
   const {
@@ -90,6 +91,7 @@ export default function ModalsHost(props: {
     // roadview
     roadviewVisible,
     roadviewContainerRef,
+    roadviewRef,
     onCloseRoadview,
   } = props;
 
@@ -174,6 +176,7 @@ export default function ModalsHost(props: {
           open={roadviewVisible}
           onClose={onCloseRoadview}
           containerRef={roadviewContainerRef}
+          roadviewRef={roadviewRef}
           onResize={() => {}}
         />
       )}

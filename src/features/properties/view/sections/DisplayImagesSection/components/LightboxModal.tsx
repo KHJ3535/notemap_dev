@@ -68,6 +68,35 @@ export default function LightboxModal({
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose, prev, next]);
 
+  /* ---------- 핀치 줌 (모바일) ---------- */
+  const [zoom, setZoom] = useState({ scale: 1, x: 0, y: 0 });
+  const pinchStartRef = useRef<{ distance: number; scale: number; cx: number; cy: number } | null>(null);
+  const panStartRef = useRef<{ x: number; y: number; tx: number; ty: number } | null>(null);
+
+  const resetZoom = useCallback(() => {
+    setZoom({ scale: 1, x: 0, y: 0 });
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    resetZoom();
+  }, [open, index, resetZoom]);
+
+  const getTouchDistance = useCallback((touches: React.TouchList | TouchList) => {
+    if (touches.length < 2) return 0;
+    const a = touches[0];
+    const b = touches[1];
+    return Math.hypot(b.clientX - a.clientX, b.clientY - a.clientY);
+  }, []);
+
+  const getTouchCenter = useCallback((touches: React.TouchList | TouchList) => {
+    if (touches.length < 2) return { x: 0, y: 0 };
+    return {
+      x: (touches[0].clientX + touches[1].clientX) / 2,
+      y: (touches[0].clientY + touches[1].clientY) / 2,
+    };
+  }, []);
+
   /* ---------- 드래그/스와이프 ---------- */
   const startXRef = useRef<number | null>(null);
   const startYRef = useRef<number | null>(null);
@@ -178,13 +207,52 @@ export default function LightboxModal({
       {/* 본문 */}
       <div className="relative px-4 pb-4 flex-1" onClick={stop}>
         <div
-          className="grid gap-4 items-stretch"
-          style={{ gridTemplateColumns }}
+          className={`flex flex-col md:grid gap-4 items-stretch ${
+            withThumbnails && len > 1 ? "md:grid-cols-[112px_1fr]" : ""
+          }`}
         >
-          {/* 왼쪽 썸네일 컬럼 */}
+          {/* 왼쪽 썸네일 컬럼 (데스크톱) / 하단 썸네일 목록 (모바일) */}
           {withThumbnails && len > 1 && (
-            <div className="w-28">
-              <div className="max-h-[78vh] overflow-y-auto pr-1 scrollbar-hide">
+            <div className="w-full md:w-28 order-2 md:order-none">
+              {/* 모바일: 가로 스크롤 */}
+              <div className="md:hidden overflow-x-auto overflow-y-hidden scrollbar-hide pb-2">
+                <div className="flex gap-2">
+                  {images.map((im, i) => {
+                    const active = i === safeIndex;
+                    const t = (
+                      im?.caption ||
+                      im?.name ||
+                      `썸네일 ${i + 1}`
+                    ).trim();
+                    return (
+                      <button
+                        key={i}
+                        className={`relative h-20 w-20 flex-shrink-0 rounded border ${
+                          active ? "border-white" : "border-white/30"
+                        }`}
+                        onClick={() => setIndex(i)}
+                        aria-label={t}
+                        title={t}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={im?.dataUrl ?? im?.url}
+                          alt={t}
+                          className="h-full w-full object-cover rounded"
+                          draggable={false}
+                          loading="lazy"
+                          decoding="async"
+                        />
+                        {active && (
+                          <span className="absolute inset-0 ring-2 ring-white rounded pointer-events-none" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              {/* 데스크톱: 세로 스크롤 */}
+              <div className="hidden md:block max-h-[78vh] overflow-y-auto pr-1 scrollbar-hide">
                 <div className="flex flex-col gap-2">
                   {images.map((im, i) => {
                     const active = i === safeIndex;
@@ -224,22 +292,31 @@ export default function LightboxModal({
           )}
 
           {/* 메인 이미지 영역 */}
-          {/* 모바일 세로 스크롤 유지 + 가로 제스처만 감지 위해 touch-action: pan-y */}
           <div
-            className="relative h-[78vh] flex items-center justify-center select-none touch-pan-y"
-            onMouseDown={(e) => dragStart(e.clientX, e.clientY)}
+            className="relative h-[60vh] md:h-[78vh] flex items-center justify-center select-none order-1 md:order-none overflow-hidden"
+            onMouseDown={(e) => {
+              if (zoom.scale <= 1) {
+                dragStart(e.clientX, e.clientY);
+              }
+            }}
             onMouseMove={(e) => {
-              if (draggingRef.current) dragMove(e.clientX, e.clientY);
+              if (draggingRef.current && zoom.scale <= 1) {
+                dragMove(e.clientX, e.clientY);
+              }
             }}
             onMouseUp={dragEnd}
             onMouseLeave={dragEnd}
             onTouchStart={(e) => {
-              const t = e.touches[0];
-              dragStart(t.clientX, t.clientY);
+              if (zoom.scale <= 1) {
+                if (e.touches.length === 1) {
+                  dragStart(e.touches[0].clientX, e.touches[0].clientY);
+                }
+              }
             }}
             onTouchMove={(e) => {
-              const t = e.touches[0];
-              dragMove(t.clientX, t.clientY);
+              if (zoom.scale <= 1 && draggingRef.current && e.touches.length === 1) {
+                dragMove(e.touches[0].clientX, e.touches[0].clientY);
+              }
             }}
             onTouchEnd={dragEnd}
           >
@@ -248,40 +325,141 @@ export default function LightboxModal({
                 <button
                   onClick={prev}
                   aria-label="이전"
-                  className="absolute left-4 top-1/2 -translate-y-1/2 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/15 hover:bg-white/25 text-white"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 z-10 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/15 hover:bg-white/25 text-white"
                 >
                   <ChevronLeft className="h-6 w-6" />
                 </button>
                 <button
                   onClick={next}
                   aria-label="다음"
-                  className="absolute right-4 top-1/2 -translate-y-1/2 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/15 hover:bg-white/25 text-white"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 z-10 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/15 hover:bg-white/25 text-white"
                 >
                   <ChevronRight className="h-6 w-6" />
                 </button>
               </>
             )}
 
-            {/* 메인 이미지 */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={cur?.dataUrl ?? cur?.url}
-              alt={albumTitle || `이미지 ${safeIndex + 1}`}
-              className={`block max-h-full max-w-[85vw] ${fitClass}`}
-              draggable={false}
-            />
+            {/* 메인 이미지 (핀치 줌 시 transform 적용) */}
+            <div
+              className="flex items-center justify-center w-full h-full touch-none"
+              style={{
+                transform: `scale(${zoom.scale}) translate(${zoom.x}px, ${zoom.y}px)`,
+                transformOrigin: "center center",
+                touchAction: "none",
+              }}
+              onMouseDown={(e) => {
+                e.stopPropagation();
+                if (zoom.scale > 1) {
+                  panStartRef.current = {
+                    x: e.clientX,
+                    y: e.clientY,
+                    tx: zoom.x,
+                    ty: zoom.y,
+                  };
+                }
+              }}
+              onMouseMove={(e) => {
+                if (panStartRef.current) {
+                  setZoom((z) => ({
+                    ...z,
+                    x: panStartRef.current!.tx + (e.clientX - panStartRef.current!.x),
+                    y: panStartRef.current!.ty + (e.clientY - panStartRef.current!.y),
+                  }));
+                }
+              }}
+              onMouseUp={() => {
+                if (panStartRef.current) {
+                  panStartRef.current = null;
+                }
+              }}
+              onMouseLeave={() => {
+                if (panStartRef.current) panStartRef.current = null;
+              }}
+              onTouchStart={(e) => {
+                e.stopPropagation();
+                if (e.touches.length === 2) {
+                  const d = getTouchDistance(e.touches);
+                  const { x: cx, y: cy } = getTouchCenter(e.touches);
+                  pinchStartRef.current = {
+                    distance: d,
+                    scale: zoom.scale,
+                    cx,
+                    cy,
+                  };
+                } else if (e.touches.length === 1) {
+                  if (zoom.scale > 1) {
+                    panStartRef.current = {
+                      x: e.touches[0].clientX,
+                      y: e.touches[0].clientY,
+                      tx: zoom.x,
+                      ty: zoom.y,
+                    };
+                  }
+                }
+              }}
+              onTouchMove={(e) => {
+                e.stopPropagation();
+                if (e.touches.length === 2 && pinchStartRef.current) {
+                  e.preventDefault();
+                  const d = getTouchDistance(e.touches);
+                  if (d <= 0) return;
+                  const k = pinchStartRef.current.distance > 0
+                    ? d / pinchStartRef.current.distance
+                    : 1;
+                  const nextScale = Math.max(1, Math.min(4, pinchStartRef.current.scale * k));
+                  setZoom((z) => ({ ...z, scale: nextScale }));
+                } else if (e.touches.length === 1) {
+                  if (panStartRef.current) {
+                    setZoom((z) => ({
+                      ...z,
+                      x: panStartRef.current!.tx + (e.touches[0].clientX - panStartRef.current!.x),
+                      y: panStartRef.current!.ty + (e.touches[0].clientY - panStartRef.current!.y),
+                    }));
+                  }
+                }
+              }}
+              onTouchEnd={(e) => {
+                e.stopPropagation();
+                if (e.touches.length < 2) pinchStartRef.current = null;
+                if (e.touches.length === 0) {
+                  panStartRef.current = null;
+                }
+              }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={cur?.dataUrl ?? cur?.url}
+                alt={albumTitle || `이미지 ${safeIndex + 1}`}
+                className={`block max-h-full max-w-[85vw] ${fitClass}`}
+                draggable={false}
+                style={{ pointerEvents: "none" }}
+              />
+            </div>
 
             {/* 카운터 */}
             {len > 1 && (
-              <div className="absolute top-3 right-3 md:right-6 rounded bg-black/60 text-white text-xs px-2 py-0.5">
+              <div className="absolute top-3 right-3 md:right-6 rounded bg-black/60 text-white text-xs px-2 py-0.5 z-10">
                 {safeIndex + 1} / {len}
               </div>
+            )}
+            {/* 줌 초기화 버튼 (확대 시에만) */}
+            {zoom.scale > 1 && (
+              <button
+                type="button"
+                onClick={(ev) => {
+                  ev.stopPropagation();
+                  resetZoom();
+                }}
+                className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 rounded bg-black/60 text-white text-sm px-3 py-1.5"
+              >
+                원래 크기
+              </button>
             )}
           </div>
 
           {/* 제목 */}
           {albumTitle && (
-            <div className={withThumbnails && len > 1 ? "col-start-2" : ""}>
+            <div className={`order-3 md:order-none ${withThumbnails && len > 1 ? "md:col-start-2 md:col-span-1" : ""}`}>
               <div
                 className="text-center text-white text-lg whitespace-pre-wrap break-words px-2"
                 title={albumTitle}

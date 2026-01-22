@@ -162,7 +162,7 @@ export function useRebuildScene(args: Args) {
           ) ||
           "";
 
-        const planText = `${m.regionLabel ?? ""} 답사예정`.trim();
+        const planText = m.regionLabel;
         const planDisplayName = displayName || planText;
 
         // ── marker 생성 ──────────────────────────────
@@ -202,7 +202,7 @@ export function useRebuildScene(args: Args) {
           return;
         }
 
-        const labelText = isPlan ? planText : displayName;
+        const labelText = isPlan ? planDisplayName : displayName;
 
         if (isPlan) {
           if (posKey) hideLabelsByPosKey(posKey);

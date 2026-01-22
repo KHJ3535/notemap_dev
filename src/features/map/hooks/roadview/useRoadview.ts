@@ -13,6 +13,8 @@ type Options = {
 type UseRoadview = {
   /** 로드뷰 DOM 컨테이너 ref (필수) */
   roadviewContainerRef: React.RefObject<HTMLDivElement>;
+  /** 로드뷰 인스턴스 ref (미니맵 동기화용) */
+  roadviewRef: React.MutableRefObject<any>;
   /** 현재 패널 표시 여부 */
   visible: boolean;
   /** 파노라마 찾는 중 */
@@ -291,6 +293,7 @@ export function useRoadview(opts: Options = {}): UseRoadview {
 
   return {
     roadviewContainerRef,
+    roadviewRef,
     visible,
     loading,
     openAtCenter,

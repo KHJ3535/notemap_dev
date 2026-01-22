@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useLayoutEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { useEscapeToClose } from "@/hooks/useEscapeToClose";
@@ -12,6 +12,8 @@ type Props = {
   onResize?: () => void;
   /** Kakao Roadview가 렌더될 DOM 컨테이너 ref (useRoadview에서 전달) */
   containerRef: React.RefObject<HTMLDivElement>;
+  /** 로드뷰 인스턴스 ref */
+  roadviewRef: React.MutableRefObject<any>;
 };
 
 /**
@@ -25,6 +27,7 @@ export default function RoadviewHost({
   onClose,
   onResize,
   containerRef,
+  roadviewRef,
 }: Props) {
   const panelRef = useRef<HTMLDivElement | null>(null);
   const lastActiveElRef = useRef<Element | null>(null);

@@ -92,6 +92,7 @@ export function MapHomeUI(props: MapHomeUIProps) {
   // 🔭 로드뷰
   const {
     roadviewContainerRef,
+    roadviewRef,
     visible: roadviewVisible,
     openAtCenter,
     openAt,
@@ -503,6 +504,7 @@ export function MapHomeUI(props: MapHomeUIProps) {
         pinDraftId={pinDraftId}
         roadviewVisible={roadviewVisible}
         roadviewContainerRef={roadviewContainerRef}
+        roadviewRef={roadviewRef}
         onCloseRoadview={close}
         createPinKind={createPinKind ?? null}
         draftHeaderPrefill={draftHeaderPrefill ?? undefined}
