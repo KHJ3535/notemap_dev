@@ -512,6 +512,8 @@ export function MapHomeUI(props: MapHomeUIProps) {
           refreshViewportPins();
         }}
         refetchPins={() => refreshViewportPins()}
+        kakaoSDK={kakaoSDK}
+        mapInstance={mapInstance}
       />
 
       <NoResultDialog

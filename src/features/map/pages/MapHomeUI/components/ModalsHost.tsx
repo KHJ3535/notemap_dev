@@ -69,6 +69,10 @@ export default function ModalsHost(props: {
   roadviewContainerRef: any;
   roadviewRef: any;
   onCloseRoadview: () => void;
+  /** Kakao SDK 인스턴스 (미니맵용) */
+  kakaoSDK?: any;
+  /** 메인 맵 인스턴스 (미니맵용) */
+  mapInstance?: any;
 }) {
   const {
     // view
@@ -178,6 +182,8 @@ export default function ModalsHost(props: {
           containerRef={roadviewContainerRef}
           roadviewRef={roadviewRef}
           onResize={() => {}}
+          kakaoSDK={props.kakaoSDK}
+          mapInstance={props.mapInstance}
         />
       )}
     </>
