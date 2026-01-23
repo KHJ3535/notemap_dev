@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useCallback } from "react";
+import { useEffect, useLayoutEffect, useRef, useCallback, useState } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { useEscapeToClose } from "@/hooks/useEscapeToClose";
@@ -46,6 +46,21 @@ export default function RoadviewHost({
   
   const MINIMAP_WIDTH = 400;
   const MINIMAP_HEIGHT = 300;
+
+  // 모바일 여부 감지
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   // ESC로 닫기 (열렸을 때만)
   useEscapeToClose(onClose, { enabled: open });
@@ -545,14 +560,17 @@ export default function RoadviewHost({
 
         {/* 미니맵: 좌측 하단 */}
         {open && (
-          <div
-            ref={minimapContainerRef}
-            className="absolute left-4 bottom-4 z-[120010] rounded-lg overflow-hidden border-2 border-white shadow-lg"
-            style={{
-              width: `${MINIMAP_WIDTH}px`,
-              height: `${MINIMAP_HEIGHT}px`,
-            }}
-          />
+          <div className="absolute left-0 bottom-0 z-[120010]">
+            {/* 미니맵 컨테이너 */}
+            <div
+              ref={minimapContainerRef}
+              className="relative overflow-hidden border-t-2 border-r-2 border-white shadow-lg bg-white"
+              style={{
+                width: isMobile ? "100vw" : "30vw",
+                height: isMobile ? "30vh" : "300px",
+              }}
+            />
+          </div>
         )}
       </div>
     </div>,
