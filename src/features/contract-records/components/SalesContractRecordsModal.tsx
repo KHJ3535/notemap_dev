@@ -38,7 +38,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { getProfile } from "@/features/users/api/account";
 import { api } from "@/shared/api/api";
-import { getTeams } from "@/features/teams";
 import {
   Popover,
   PopoverContent,
@@ -132,14 +131,35 @@ export function SalesContractRecordsModal({
   const { data: myTeamMembers } = useQuery({
     queryKey: ["my-team-members"],
     queryFn: async () => {
-      try {
-        // 프로필에서 accountId 가져오기
-        const accountId = profile?.account?.id;
-        if (!accountId) return [];
+      const log = (msg: string, extra?: object) => {
+        console.log("[담당자목록]", msg, extra ?? "");
+      };
 
-        // 팀 목록 가져오기
-        const teams = await getTeams();
-        if (teams.length === 0) return [];
+      try {
+        const accountId = profile?.account?.id;
+        if (!accountId) {
+          log("accountId 없음, 스킵");
+          return [];
+        }
+
+        // 팀 목록 가져오기 (상태 코드 로깅용 api.get 사용)
+        let teams: Array<{ id: number | string; name: string }> = [];
+        try {
+          const teamsRes = await api.get<{ message: string; data: Array<{ id: number | string; name: string }> }>(
+            "/dashboard/accounts/teams"
+          );
+          teams = teamsRes.data.data ?? [];
+          log("getTeams 요청: 성공", { status: teamsRes.status, 팀수: teams.length });
+        } catch (err: any) {
+          const status = err?.response?.status;
+          log("getTeams 요청: 실패", { status: status ?? "network/기타", error: err?.message });
+          return [];
+        }
+
+        if (teams.length === 0) {
+          log("팀 목록 없음");
+          return [];
+        }
 
         // 각 팀의 상세 조회를 통해 내가 속한 팀 찾기
         for (const team of teams) {
@@ -149,28 +169,34 @@ export function SalesContractRecordsModal({
               data: {
                 id: string;
                 name: string;
-                members: Array<{
-                  accountId: string;
-                  name: string | null;
-                }>;
+                members: Array<{ accountId: string; name: string | null }>;
               };
             }>(`/dashboard/accounts/teams/${team.id}`);
+
+            const status = teamDetailResponse.status;
+            log(`teams/${team.id} 요청: 성공`, { status: status ?? 200, 멤버수: teamDetailResponse.data.data.members.length });
 
             const isMyTeam = teamDetailResponse.data.data.members.some(
               (member) => String(member.accountId) === String(accountId)
             );
 
             if (isMyTeam) {
-              return teamDetailResponse.data.data.members;
+              const members = teamDetailResponse.data.data.members;
+              log("최종: 내 팀 멤버 반환", { 멤버수: members.length });
+              return members;
             }
-          } catch (error) {
-            console.error(`팀 ${team.id} 조회 실패:`, error);
+          } catch (err: any) {
+            const status = err?.response?.status;
+            log(`teams/${team.id} 요청: 실패`, { status: status ?? "network/기타", error: err?.message });
             continue;
           }
         }
+
+        log("최종: 내 팀 없음, 멤버 0명");
         return [];
-      } catch (error) {
-        console.error("팀 멤버 조회 실패:", error);
+      } catch (error: any) {
+        const status = error?.response?.status;
+        console.error("[담당자목록] 팀 멤버 조회 실패", { status: status ?? "network/기타", error: error?.message });
         return [];
       }
     },

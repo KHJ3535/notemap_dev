@@ -82,6 +82,9 @@ const MapView = React.forwardRef<MapViewHandle, Props>(function MapView(
     [searchPlace, panTo]
   );
 
+  // 마우스 클릭 화면 좌표 보관 (주소 모달 위치용)
+  const lastClickPointRef = useRef({ x: 0, y: 0 });
+
   // 구/군 경계 오버레이
   useDistrictOverlay(kakao, map, useDistrict);
 
@@ -111,9 +114,9 @@ const MapView = React.forwardRef<MapViewHandle, Props>(function MapView(
 
       console.log("map clicked", pos.lat, pos.lng);
 
-      // 1) 지도 클릭으로 임시핀 생성 (옵션)
-      if (allowCreateOnMapClick && onMapClick) {
-        onMapClick(pos);
+      // 1) 지도 클릭 콜백 (주소 모달 등; allowCreateOnMapClick와 별개)
+      if (onMapClick) {
+        onMapClick(pos, lastClickPointRef.current);
       }
 
       // 2) 로드뷰 도로(파란선) 모드일 때 → 로드뷰 열기 콜백
@@ -211,7 +214,13 @@ const MapView = React.forwardRef<MapViewHandle, Props>(function MapView(
           />
         </div>
       )}
-      <div ref={containerRef} className="w-full h-full" />
+      <div
+        ref={containerRef}
+        className="w-full h-full"
+        onMouseDownCapture={(e) => {
+          lastClickPointRef.current = { x: e.clientX, y: e.clientY };
+        }}
+      />
     </div>
   );
 });

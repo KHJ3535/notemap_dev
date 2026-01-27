@@ -31,6 +31,12 @@ export default function MapCanvas(props: {
 
   /** 🔵 로드뷰 도로 위 클릭 시 호출 */
   onRoadviewClick?: (pos: { lat: number; lng: number }) => void;
+
+  /** 지도 빈 곳 클릭 시 호출 (point: 마우스 화면 좌표) */
+  onMapClick?: (
+    pos: { lat: number; lng: number },
+    point?: { x: number; y: number }
+  ) => void;
 }) {
   const {
     appKey,
@@ -55,6 +61,7 @@ export default function MapCanvas(props: {
 
     showRoadviewOverlay,
     onRoadviewClick,
+    onMapClick,
   } = props;
 
   // ✅ 전역 라벨 레지스트리 이벤트 핸들러 1회 연결
@@ -191,6 +198,7 @@ export default function MapCanvas(props: {
         // 🔵 로드뷰 관련
         showRoadviewOverlay={showRoadviewOverlay}
         onRoadviewClick={onRoadviewClick}
+        onMapClick={onMapClick}
       />
 
       {pinsLoading && (

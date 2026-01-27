@@ -53,8 +53,11 @@ export type MapViewProps = {
   /** 개별 마커 클릭 */
   onMarkerClick?: (id: string) => void;
 
-  /** 지도 클릭 콜백 */
-  onMapClick?: (latlng: LatLng) => void;
+  /** 지도 클릭 콜백 (point: 마우스 클릭 화면 좌표, 주소 모달 위치용) */
+  onMapClick?: (
+    latlng: LatLng,
+    point?: { x: number; y: number }
+  ) => void;
 
   /** Kakao SDK/Map 준비 완료 */
   onMapReady?: (ctx: {

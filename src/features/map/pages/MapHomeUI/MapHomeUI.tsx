@@ -32,6 +32,7 @@ import { focusMapToPosition } from "./lib/viewUtils";
 import { TopRegion } from "./components/TopRegion";
 import usePlaceSearchOnMap from "./hooks/usePlaceSearchOnMap";
 import ContextMenuHost from "../../components/contextMenu/ContextMenuHost";
+import { AddressModal } from "../../components/AddressModal";
 import { hideLabelsAround } from "../../engine/overlays/labelRegistry";
 import { useBounds } from "../../hooks/viewport/useBounds";
 import { useBoundsRaw } from "../../hooks/viewport/useBoundsRaw";
@@ -122,6 +123,28 @@ export function MapHomeUI(props: MapHomeUIProps) {
     roadviewVisible,
     closeRoadview: close,
   });
+
+  // 지도 빈 곳 클릭 → 주소 모달 (클릭 위치에 띄움)
+  const [addressModalOpen, setAddressModalOpen] = useState(false);
+  const [addressModalPosition, setAddressModalPosition] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
+  const [addressModalPoint, setAddressModalPoint] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
+  const handleMapClickForAddress = useCallback(
+    (
+      pos: { lat: number; lng: number },
+      point?: { x: number; y: number }
+    ) => {
+      setAddressModalPosition(pos);
+      setAddressModalPoint(point ?? null);
+      setAddressModalOpen(true);
+    },
+    []
+  );
 
   // 🔍 필터 검색 상태/로직 (API + bounds 맞추기)
   const {
@@ -368,6 +391,15 @@ export function MapHomeUI(props: MapHomeUIProps) {
         isDistrictOn={isDistrictOn}
         showRoadviewOverlay={roadviewRoadOn}
         onRoadviewClick={roadviewRoadOn ? handleRoadviewClickOnMap : undefined}
+        onMapClick={handleMapClickForAddress}
+      />
+
+      <AddressModal
+        open={addressModalOpen}
+        onOpenChange={setAddressModalOpen}
+        position={addressModalPosition}
+        anchorPoint={addressModalPoint}
+        kakaoSDK={kakaoSDK}
       />
 
       <ContextMenuHost
