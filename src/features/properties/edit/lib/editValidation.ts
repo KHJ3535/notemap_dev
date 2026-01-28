@@ -2,10 +2,15 @@
 
 const normalizePhone = (v: string) => v.replace(/[^\d]/g, "");
 
+/** 한국 전화번호 검증. 휴대/지역/대표번호(1577, 1588, 1544, 1644 등) 지원 */
 export const isValidPhoneKR = (raw?: string | null) => {
   const s = (raw ?? "").trim();
   if (!s) return false;
   const v = normalizePhone(s);
+
+  // 대표번호 15xx/16xx/18xx 8자리 또는 10자리
+  if (/^1[5-9]\d{2}(\d{4}|\d{6})$/.test(v)) return true;
+
   if (!/^0\d{9,10}$/.test(v)) return false;
   if (v.startsWith("02")) return v.length === 9 || v.length === 10;
   return v.length === 10 || v.length === 11;

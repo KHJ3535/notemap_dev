@@ -23,6 +23,7 @@ export async function getPinDraftDetail(
     addressLine: detail.addressLine ?? null,
     name: detail.name ?? null,
     contactMainPhone: detail.contactMainPhone ?? null,
+    contactSubPhone: detail.contactSubPhone ?? null,
   };
 }
 

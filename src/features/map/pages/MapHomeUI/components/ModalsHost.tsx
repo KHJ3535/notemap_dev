@@ -55,10 +55,11 @@ export default function ModalsHost(props: {
   /** ✅ MapHomeUI에서 내려주는 생성용 기본 핀종류 */
   createPinKind?: PinKind | null;
 
-  /** ✅ 임시핀 헤더 프리필용 (매물명 / 분양사무실 전화번호) */
+  /** ✅ 임시핀 헤더 프리필용 (매물명 / 분양사무실 대표·추가 전화번호) */
   draftHeaderPrefill?: {
     title?: string;
     officePhone?: string;
+    officePhone2?: string;
   };
 
   /** ✅ 현재 뷰포트 기준 핀 다시 불러오기 (usePinsMap.refetch) */
@@ -130,6 +131,8 @@ export default function ModalsHost(props: {
           title: draftDetail.name ?? draftHeaderPrefill?.title,
           officePhone:
             draftDetail.contactMainPhone ?? draftHeaderPrefill?.officePhone,
+          officePhone2:
+            draftDetail.contactSubPhone ?? draftHeaderPrefill?.officePhone2,
         }
       : draftHeaderPrefill;
 

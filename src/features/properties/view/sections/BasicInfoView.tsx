@@ -27,9 +27,8 @@ export default function BasicInfoView({
     setIsMobile(mobileCheck);
   }, []);
 
-  const phones = [officePhone, officePhone2]
-    .map((p) => (p ?? "").trim())
-    .filter((p) => p.length > 0);
+  const mainPhone = (officePhone ?? "").trim();
+  const subPhone = (officePhone2 ?? "").trim();
 
   const toTel = (phone: string) => phone.replace(/[^0-9+]/g, "");
 
@@ -47,6 +46,29 @@ export default function BasicInfoView({
     }
   };
 
+  const renderPhone = (phone: string) => (
+    <div className="flex items-center gap-1">
+      <span>{phone}</span>
+      {isMobile ? (
+        <a
+          href={`tel:${toTel(phone)}`}
+          aria-label={`${phone}로 전화 걸기`}
+        >
+          <Phone className="w-4 h-4 text-blue-500 hover:text-blue-600" />
+        </a>
+      ) : (
+        <button
+          type="button"
+          onClick={() => copyToClipboard(phone)}
+          className="cursor-pointer"
+          aria-label={`${phone} 복사하기`}
+        >
+          <Copy className="w-4 h-4 text-slate-500 hover:text-slate-700" />
+        </button>
+      )}
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       {/* 주소 */}
@@ -56,43 +78,19 @@ export default function BasicInfoView({
         </div>
       </Field>
 
-      <Field label="분양사무실" align="start" contentClassName="-mt-[3px]">
-        {phones.length === 0 ? (
-          <div className="h-9 flex items-center text-sm text-slate-800">-</div>
-        ) : (
-          <div
-            className="
-        flex flex-col gap-1
-        sm:flex-row sm:gap-6 sm:items-center
-        text-sm text-slate-800
-      "
-          >
-            {phones.map((phone) => (
-              <div key={phone} className="flex items-center gap-1">
-                <span>{phone}</span>
-
-                {isMobile ? (
-                  <a
-                    href={`tel:${toTel(phone)}`}
-                    aria-label={`${phone}로 전화 걸기`}
-                  >
-                    <Phone className="w-4 h-4 text-blue-500 hover:text-blue-600" />
-                  </a>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => copyToClipboard(phone)}
-                    className="cursor-pointer"
-                    aria-label={`${phone} 복사하기`}
-                  >
-                    <Copy className="w-4 h-4 text-slate-500 hover:text-slate-700" />
-                  </button>
-                )}
-              </div>
-            ))}
+      {/* 분양사무실 / 분양사무실2 (가로 나란히) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <Field label="분양사무실" align="start" contentClassName="-mt-[3px]">
+          <div className="flex items-center text-sm text-slate-800">
+            {mainPhone ? renderPhone(mainPhone) : "-"}
           </div>
-        )}
-      </Field>
+        </Field>
+        <Field label="분양사무실2" align="start" contentClassName="-mt-[3px]">
+          <div className="flex items-center text-sm text-slate-800">
+            {subPhone ? renderPhone(subPhone) : "-"}
+          </div>
+        </Field>
+      </div>
     </div>
   );
 }

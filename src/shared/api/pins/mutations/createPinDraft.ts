@@ -39,6 +39,10 @@ export async function createPinDraft(
     String(dto.contactMainPhone).trim() !== ""
       ? { contactMainPhone: String(dto.contactMainPhone).trim() }
       : {}),
+    ...(dto.contactSubPhone != null &&
+    String(dto.contactSubPhone).trim() !== ""
+      ? { contactSubPhone: String(dto.contactSubPhone).trim() }
+      : {}),
   };
 
   const request = api.post<CreatePinDraftResponse>("/pin-drafts", payload, {

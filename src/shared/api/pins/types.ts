@@ -108,8 +108,10 @@ export type CreatePinDraftDto = {
   addressLine: string | null | undefined;
   name?: string | null;
 
-  /** 분양사무실 전화번호 */
+  /** 분양사무실 대표번호 */
   contactMainPhone?: string | null;
+  /** 분양사무실 추가번호(선택) — UI "추가번호 (선택)" ↔ contactSubPhone */
+  contactSubPhone?: string | null;
 };
 
 export type PinDraftDetail = {
@@ -119,6 +121,7 @@ export type PinDraftDetail = {
   addressLine: string | null;
   name?: string | null;
   contactMainPhone?: string | null;
+  contactSubPhone?: string | null;
 };
 
 export type DeletePinRes = {
