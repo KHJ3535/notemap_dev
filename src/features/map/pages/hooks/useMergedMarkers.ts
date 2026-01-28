@@ -247,6 +247,11 @@ export function useMergedMarkers(params: {
       return mergedMarkers;
     }
 
+    // 🔹 검색(__search__)으로 연 메뉴는 핀 없음. 저장 시에만 핀 생성.
+    if (targetIdStr === "__search__") {
+      return mergedMarkers;
+    }
+
     // 🔹 1) 앵커 근처에 "실제 매물 핀" 이 하나라도 있으면 임시핀 만들지 않기
     //    → 여유 있게 150m 이내면 같은 위치로 간주
     const NEAR_THRESHOLD_M = 150;

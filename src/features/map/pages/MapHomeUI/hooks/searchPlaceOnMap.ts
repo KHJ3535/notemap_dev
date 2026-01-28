@@ -298,7 +298,7 @@ export async function searchPlaceOnMap(text: string, deps: SearchDeps) {
       return;
     }
 
-    // 🔹 근처에 실제 핀이 없으면 __search__ 임시핀을 만들고 메뉴 열기
+    // 🔹 근처에 실제 핀이 없으면 메뉴만 열기 (핀은 저장 시에만 생성)
     clearTempMarkers();
 
     lastSearchCenterRef.current = { lat, lng };
@@ -306,22 +306,13 @@ export async function searchPlaceOnMap(text: string, deps: SearchDeps) {
     const id = "__search__";
 
     if (process.env.NODE_ENV !== "production") {
-      console.log("[searchPlaceOnMap] create __search__ marker", {
+      console.log("[searchPlaceOnMap] open menu only (no pin)", {
         id,
         lat,
         lng,
         label,
       });
     }
-
-    upsertDraftMarker({
-      id,
-      lat,
-      lng,
-      address: label ?? query,
-      source: "search",
-      kind: "question",
-    });
 
     const openMenu = () => {
       onOpenMenu?.({
