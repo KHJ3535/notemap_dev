@@ -133,7 +133,7 @@ export default function StructureLinesSection({
                   aria-required="true"
                 />
                 <span className="text-[11px] md:text-xs text-gray-500 shrink-0 leading-none">
-                  만원
+                  백만원
                 </span>
               </div>
 
@@ -154,7 +154,7 @@ export default function StructureLinesSection({
                   aria-required="true"
                 />
                 <span className="text-[11px] md:text-xs text-gray-500 shrink-0 leading-none">
-                  만원
+                  백만원
                 </span>
               </div>
             </div>

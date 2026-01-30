@@ -23,6 +23,13 @@ const toNumText = (v: unknown): string => {
   return typeof n === "number" ? String(Math.trunc(n)) : "-";
 };
 
+/** 금액 표시: 천단위 콤마 구분, 없으면 "-" */
+const formatAmount = (v: unknown): string => {
+  const n = toNum(v);
+  if (typeof n !== "number") return "-";
+  return Math.trunc(n).toLocaleString("ko-KR");
+};
+
 /** any → 정수 (fallback 사용) */
 const toInt = (v: unknown, fallback = 0) => {
   const n = toNum(v);
@@ -73,11 +80,11 @@ export default function StructureLinesList({
               .filter(Boolean)
               .join(", ") || "-";
 
-          // 최소/최대는 숫자만 추려서 노출 (문자면 숫자 부분만 파싱)
-          const minText = toNumText(
+          // 최소/최대 금액: 천단위 구분
+          const minText = formatAmount(
             (l as any)?.primary ?? (l as any)?.minPrice
           );
-          const maxText = toNumText(
+          const maxText = formatAmount(
             (l as any)?.secondary ?? (l as any)?.maxPrice
           );
 

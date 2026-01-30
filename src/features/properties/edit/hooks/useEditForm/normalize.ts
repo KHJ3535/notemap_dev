@@ -227,18 +227,28 @@ export function normalizeInitialData(initialData: any | null): Normalized {
         ? String(listingStars)
         : "") as StarStr);
 
-  // ───────── units → unitLines ─────────
+  // ───────── units → unitLines (DB 값 ÷ 1000000 → 백만원 단위로 표시, 등록과 동일) ─────────
   const unitLines: UnitLine[] = Array.isArray(d.units)
-    ? (d.units as any[]).map((u) => ({
-        rooms: asNum(u?.rooms ?? 0, 0),
-        baths: asNum(u?.baths ?? 0, 0),
-        duplex: !!u?.hasLoft,
-        terrace: !!u?.hasTerrace,
-        primary:
-          u?.minPrice == null || u?.minPrice === "" ? "" : String(u.minPrice),
-        secondary:
-          u?.maxPrice == null || u?.maxPrice === "" ? "" : String(u.maxPrice),
-      }))
+    ? (d.units as any[]).map((u) => {
+        const minVal = u?.minPrice;
+        const maxVal = u?.maxPrice;
+        const primary =
+          minVal == null || minVal === ""
+            ? ""
+            : String(Number(minVal) / 1000000);
+        const secondary =
+          maxVal == null || maxVal === ""
+            ? ""
+            : String(Number(maxVal) / 1000000);
+        return {
+          rooms: asNum(u?.rooms ?? 0, 0),
+          baths: asNum(u?.baths ?? 0, 0),
+          duplex: !!u?.hasLoft,
+          terrace: !!u?.hasTerrace,
+          primary,
+          secondary,
+        };
+      })
     : Array.isArray(d.unitLines)
     ? (d.unitLines as UnitLine[])
     : [];

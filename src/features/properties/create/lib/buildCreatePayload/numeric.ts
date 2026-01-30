@@ -12,6 +12,13 @@ export const toIntOrNullLocal = (v: unknown) => {
   return Number.isFinite(n) ? Math.trunc(n) : null;
 };
 
+/** 소수 유지 (구조별 입력 금액). null/빈값 → null */
+export const toNumOrNullLocal = (v: unknown): number | null => {
+  if (v === "" || v === null || v === undefined) return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+};
+
 export const toInt = (v: unknown) => {
   const n = toNum(v);
   return n === undefined ? undefined : Math.trunc(n);

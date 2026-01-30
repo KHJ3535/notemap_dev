@@ -30,6 +30,13 @@ export const toIntOrNull = (v: any): number | null => {
   return Number.isFinite(n) ? Math.trunc(n) : null;
 };
 
+/* 숫자 정규화: 소수 유지 (units minPrice/maxPrice 등). null/빈값 → null */
+export const toNumOrNull = (v: any): number | null => {
+  if (v === "" || v === null || v === undefined) return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+};
+
 /* 🔐 parkingGrade 정규화(문자열로 보냄): 1~5 → "1".."5", null 유지, 그 외는 undefined(필드 제외) */
 export function normalizeParkingGradeStr(
   v: unknown,
@@ -255,14 +262,20 @@ export function sanitizeUnits(
 
   const nz = (n: number | null) => (n != null && n < 0 ? 0 : n);
 
-  const mapped = list.map((u) => ({
-    rooms: nz(toIntOrNull(u?.rooms)),
-    baths: nz(toIntOrNull(u?.baths)),
-    hasLoft: !!u?.hasLoft,
-    hasTerrace: !!u?.hasTerrace,
-    minPrice: nz(toIntOrNull(u?.minPrice)),
-    maxPrice: nz(toIntOrNull(u?.maxPrice)),
-  }));
+  const mapped = list.map((u) => {
+    const minP = toNumOrNull(u?.minPrice);
+    const maxP = toNumOrNull(u?.maxPrice);
+    const toStoredPrice = (n: number | null) =>
+      n == null ? null : nz(Math.round(n * 1000000));
+    return {
+      rooms: nz(toIntOrNull(u?.rooms)),
+      baths: nz(toIntOrNull(u?.baths)),
+      hasLoft: !!u?.hasLoft,
+      hasTerrace: !!u?.hasTerrace,
+      minPrice: toStoredPrice(minP),
+      maxPrice: toStoredPrice(maxP),
+    };
+  });
 
   return mapped;
 }

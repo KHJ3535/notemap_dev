@@ -11,7 +11,7 @@ import { buildAreaGroups } from "@/features/properties/lib/area";
 import type { CreatePinAreaGroupDto } from "@/features/properties/types/area-group-dto";
 import { PinKind } from "@/features/pins/types";
 
-import { toNum, toIntOrNullLocal, s } from "./numeric";
+import { toNum, toIntOrNullLocal, toNumOrNullLocal, s } from "./numeric";
 import { normalizeUnits } from "./normalizeUnits";
 import { buildOptionsForServer } from "./options";
 import { buildImages } from "./images";
@@ -166,7 +166,6 @@ export function buildCreatePayload(args: BuildArgs) {
     const src =
       Array.isArray(unitLines) && unitLines[idx] ? unitLines[idx] : ({} as any);
 
-    // 금액
     const rawMin =
       (src as any).primary ?? (src as any).minPrice ?? (src as any).min ?? null;
     const rawMax =
@@ -174,9 +173,9 @@ export function buildCreatePayload(args: BuildArgs) {
       (src as any).maxPrice ??
       (src as any).max ??
       null;
-
-    const minPrice = toIntOrNullLocal(rawMin);
-    const maxPrice = toIntOrNullLocal(rawMax);
+    /** 구조별 입력(백만원) → sanitizeUnits에서 무조건 × 1000000 적용 */
+    const minPrice = toNumOrNullLocal(rawMin);
+    const maxPrice = toNumOrNullLocal(rawMax);
 
     // 복층/테라스 → hasLoft/hasTerrace로 강제 매핑
     const rawLoft =
