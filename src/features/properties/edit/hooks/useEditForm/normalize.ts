@@ -217,10 +217,12 @@ export function normalizeInitialData(initialData: any | null): Normalized {
   const parkingType: string | null = rawParkingType ? rawParkingType : null;
 
   const parkingTypes: string[] = Array.isArray(d.parkingTypes)
-    ? (d.parkingTypes as string[]).map((x) => String(x ?? "").trim()).filter(Boolean)
+    ? (d.parkingTypes as string[])
+        .map((x) => String(x ?? "").trim())
+        .filter(Boolean)
     : parkingType
-      ? [parkingType]
-      : [];
+    ? [parkingType]
+    : [];
 
   const totalParkingSlots = asStr(
     d.totalParkingSlots ?? d.parking?.totalSlots ?? ""
@@ -268,11 +270,12 @@ export function normalizeInitialData(initialData: any | null): Normalized {
   const buildingType: BuildingType | null =
     normalizeBuildingType(buildingTypeSource);
 
+  // building_type 무시, building_types만 사용
   const buildingTypes: string[] = Array.isArray(d.buildingTypes)
-    ? (d.buildingTypes as string[]).map((x) => String(x ?? "").trim()).filter(Boolean)
-    : buildingType
-      ? [buildingType]
-      : [];
+    ? (d.buildingTypes as string[])
+        .map((x) => String(x ?? "").trim())
+        .filter(Boolean)
+    : [];
 
   /* ───────── 옵션/직접입력/리베이트 ───────── */
 
