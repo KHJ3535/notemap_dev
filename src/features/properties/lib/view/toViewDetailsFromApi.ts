@@ -15,6 +15,8 @@ export type ApiPin = {
   ageType?: "NEW" | "OLD" | null;
 
   buildingType?: "APT" | "OP" | "주택" | "근생" | string | null;
+  /** ✅ 건물유형 배열 (등기 표시용) */
+  buildingTypes?: string[] | null;
 
   /** ✅ 숫자 필드들 */
   totalBuildings?: number | null;
@@ -278,10 +280,16 @@ export function toViewDetailsFromApi(
   const orientations = toOrientationRows(api.directions);
   const area = mapAreaGroups(api);
 
+  // 등기: buildingType(단일) 우선, 없으면 buildingTypes 배열에서 추출 (쉼표로 연결)
   const registryLabel =
     BUILDING_TYPE_LABEL[String(api.buildingType ?? "")] ??
     api.buildingType ??
-    undefined;
+    (Array.isArray(api.buildingTypes) && api.buildingTypes.length > 0
+      ? api.buildingTypes
+          .map((t) => BUILDING_TYPE_LABEL[String(t ?? "")] ?? t)
+          .filter(Boolean)
+          .join(", ")
+      : undefined);
 
   // ⭐ parkingGrade/별점 변환
   const pg = normalizeParkingGrade(api.parkingGrade);
