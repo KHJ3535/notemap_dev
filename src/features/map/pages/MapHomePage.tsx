@@ -259,6 +259,8 @@ export default function MapHomePage() {
       useSidebar: s.useSidebar,
       setUseSidebar: s.setUseSidebar,
       useDistrict: s.useDistrict,
+      distanceMeasureVisible: s.distanceMeasureVisible,
+      onToggleDistanceMeasure: s.toggleDistanceMeasure,
 
       poiKinds: s.poiKinds,
       onChangePoiKinds,

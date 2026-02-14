@@ -16,6 +16,10 @@ type CommonProps = {
   roadviewVisible: boolean;
   onToggleRoadview: () => void;
 
+  /** 거리재기 토글 */
+  distanceMeasureVisible: boolean;
+  onToggleDistanceMeasure: () => void;
+
   /** 주변시설 선택 */
   poiKinds: readonly PoiKind[];
   onChangePoiKinds: (next: PoiKind[]) => void;

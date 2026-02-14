@@ -42,6 +42,9 @@ export type MapHomeUIProps = {
   useSidebar: boolean;
   setUseSidebar: Dispatch<SetStateAction<boolean>>;
   useDistrict: boolean;
+  /** 거리재기 도구 켜기/끄기 */
+  distanceMeasureVisible?: boolean;
+  onToggleDistanceMeasure?: () => void;
 
   // ⭐ POI
   poiKinds: ReadonlyArray<PoiKind>;

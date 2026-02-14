@@ -24,6 +24,9 @@ type TopRegionProps = {
   roadviewVisible: boolean;
   onToggleRoadview: () => void;
 
+  distanceMeasureVisible: boolean;
+  onToggleDistanceMeasure: () => void;
+
   rightOpen: boolean;
   setRightOpen: (open: boolean) => void;
 
@@ -53,6 +56,8 @@ export const TopRegion = forwardRef<HTMLDivElement, TopRegionProps>(
       onChangePoiKinds,
       roadviewVisible,
       onToggleRoadview,
+      distanceMeasureVisible,
+      onToggleDistanceMeasure,
       rightOpen,
       setRightOpen,
       sidebarOpen,
@@ -103,6 +108,8 @@ export const TopRegion = forwardRef<HTMLDivElement, TopRegionProps>(
               onChangePoiKinds={onChangePoiKinds}
               roadviewVisible={roadviewVisible}
               onToggleRoadview={onToggleRoadview}
+              distanceMeasureVisible={distanceMeasureVisible}
+              onToggleDistanceMeasure={onToggleDistanceMeasure}
               rightOpen={rightOpen}
               setRightOpen={setRightOpen}
               sidebarOpen={sidebarOpen}

@@ -8,9 +8,10 @@ export function useMapTools() {
   const [mapToolMode, setMapToolMode] = useState<MapToolMode>("none");
   const [useSidebar, setUseSidebar] = useState<boolean>(false);
 
-  /** 파생: 지적편집도 / 로드뷰 상태 */
+  /** 파생: 지적편집도 / 로드뷰 / 거리재기 상태 */
   const useDistrict = mapToolMode === "district";
   const roadviewVisible = mapToolMode === "roadview";
+  const distanceMeasureVisible = mapToolMode === "distanceMeasure";
 
   /** 지적편집도 토글 (배타적) */
   const toggleDistrict = useCallback(() => {
@@ -38,14 +39,23 @@ export function useMapTools() {
     });
   }, []);
 
+  /** 거리재기 토글 (배타적) */
+  const toggleDistanceMeasure = useCallback(() => {
+    setMapToolMode((prev) =>
+      prev === "distanceMeasure" ? "none" : "distanceMeasure"
+    );
+  }, []);
+
   return {
     mapToolMode,
     useSidebar,
     setUseSidebar,
     useDistrict,
     roadviewVisible,
+    distanceMeasureVisible,
     toggleDistrict,
     toggleRoadview,
+    toggleDistanceMeasure,
     setUseDistrict,
     setRoadviewVisible,
   } as const;

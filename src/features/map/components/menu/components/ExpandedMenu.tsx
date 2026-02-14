@@ -21,6 +21,7 @@ import type { MapMenuKey } from "../types/mapMenu.types";
 import { FilterSection } from "./FilterSection";
 import RoadviewToggleButton from "./RoadviewToggleButton";
 import DistrictToggleButton from "./DistrictToggleButton";
+import DistanceMeasureToggleButton from "./DistanceMeasureToggleButton";
 import { POI_LABEL } from "../../../engine/overlays/poiOverlays";
 import { PoiKind } from "@/features/map/poi/lib/poiTypes";
 import {
@@ -51,6 +52,10 @@ interface ExpandedMenuProps {
   // 로드뷰
   roadviewVisible: boolean;
   onToggleRoadview: () => void;
+
+  // 거리재기
+  distanceMeasureVisible: boolean;
+  onToggleDistanceMeasure: () => void;
 }
 
 export type PoiCategoryKey = (typeof POI_CATEGORY_KEYS)[number];
@@ -83,6 +88,8 @@ export const ExpandedMenu: React.FC<ExpandedMenuProps> = React.memo(
     onChangePoiKinds,
     roadviewVisible,
     onToggleRoadview,
+    distanceMeasureVisible,
+    onToggleDistanceMeasure,
     onToggle,
   }) {
     // ✅ 주변시설 카테고리 탭 상태
@@ -252,7 +259,7 @@ export const ExpandedMenu: React.FC<ExpandedMenuProps> = React.memo(
             <div className="mb-2 text-xs font-semibold text-gray-600">
               지도 도구
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               <DistrictToggleButton
                 pressed={isDistrictOn}
                 onPress={onToggleDistrict}
@@ -262,6 +269,12 @@ export const ExpandedMenu: React.FC<ExpandedMenuProps> = React.memo(
               <RoadviewToggleButton
                 pressed={roadviewVisible}
                 onPress={onToggleRoadview}
+                showLabel
+              />
+
+              <DistanceMeasureToggleButton
+                pressed={distanceMeasureVisible}
+                onPress={onToggleDistanceMeasure}
                 showLabel
               />
             </div>

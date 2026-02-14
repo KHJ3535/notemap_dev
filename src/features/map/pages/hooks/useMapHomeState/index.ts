@@ -34,8 +34,10 @@ export function useMapHomeState() {
     setUseSidebar,
     useDistrict,
     roadviewVisible,
+    distanceMeasureVisible,
     toggleDistrict,
     toggleRoadview,
+    toggleDistanceMeasure,
     setUseDistrict,
     setRoadviewVisible,
   } = useMapTools();
@@ -320,6 +322,8 @@ export function useMapHomeState() {
     setUseDistrict,
     roadviewVisible,
     setRoadviewVisible,
+    distanceMeasureVisible,
+    toggleDistanceMeasure,
     toggleDistrict,
     toggleRoadview,
 

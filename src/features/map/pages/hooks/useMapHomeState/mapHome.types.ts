@@ -1,8 +1,8 @@
 import { CreateFromPinArgs } from "@/features/map/components/contextMenu/PinContextMenu/PinContextMenuContainer.types";
 import type { LatLng } from "@/lib/geo/types";
 
-/** 지도 도구 모드 (지적/로드뷰 배타적 관리) */
-export type MapToolMode = "none" | "district" | "roadview";
+/** 지도 도구 모드 (지적/로드뷰/거리재기 배타적 관리) */
+export type MapToolMode = "none" | "district" | "roadview" | "distanceMeasure";
 
 /** 검색/뷰포트 정보 */
 export type Viewport = {

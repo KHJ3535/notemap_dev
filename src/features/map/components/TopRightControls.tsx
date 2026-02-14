@@ -44,6 +44,8 @@ export default function TopRightControls(props: {
   onChangePoiKinds: (next: PoiKind[]) => void;
   roadviewVisible: boolean;
   onToggleRoadview: () => void;
+  distanceMeasureVisible?: boolean;
+  onToggleDistanceMeasure?: () => void;
   rightOpen: boolean;
   setRightOpen: (v: boolean) => void;
   sidebarOpen: boolean;
@@ -251,6 +253,8 @@ export default function TopRightControls(props: {
             onChangePoiKinds={handleChangePoiKinds}
             roadviewVisible={props.roadviewVisible}
             onToggleRoadview={props.onToggleRoadview}
+            distanceMeasureVisible={props.distanceMeasureVisible ?? false}
+            onToggleDistanceMeasure={props.onToggleDistanceMeasure ?? (() => {})}
             expanded={props.rightOpen}
             onExpandChange={(expanded) => {
               props.setRightOpen(expanded);

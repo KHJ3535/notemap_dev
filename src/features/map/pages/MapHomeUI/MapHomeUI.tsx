@@ -33,6 +33,7 @@ import { TopRegion } from "./components/TopRegion";
 import usePlaceSearchOnMap from "./hooks/usePlaceSearchOnMap";
 import ContextMenuHost from "../../components/contextMenu/ContextMenuHost";
 import { AddressModal } from "../../components/AddressModal";
+import { MapDistanceMeasure } from "../../components/MapDistanceMeasure/MapDistanceMeasure";
 import { hideLabelsAround } from "../../engine/overlays/labelRegistry";
 import { useBounds } from "../../hooks/viewport/useBounds";
 import { useBoundsRaw } from "../../hooks/viewport/useBoundsRaw";
@@ -51,6 +52,8 @@ export function MapHomeUI(props: MapHomeUIProps) {
     onSubmitSearch,
     useSidebar,
     setUseSidebar,
+    distanceMeasureVisible = false,
+    onToggleDistanceMeasure,
     poiKinds,
     onChangePoiKinds,
     menuOpen,
@@ -391,7 +394,15 @@ export function MapHomeUI(props: MapHomeUIProps) {
         isDistrictOn={isDistrictOn}
         showRoadviewOverlay={roadviewRoadOn}
         onRoadviewClick={roadviewRoadOn ? handleRoadviewClickOnMap : undefined}
-        onMapClick={handleMapClickForAddress}
+        onMapClick={
+          distanceMeasureVisible ? undefined : handleMapClickForAddress
+        }
+      />
+
+      <MapDistanceMeasure
+        visible={distanceMeasureVisible}
+        kakaoSDK={kakaoSDK}
+        mapInstance={mapInstance}
       />
 
       <AddressModal
@@ -452,6 +463,8 @@ export function MapHomeUI(props: MapHomeUIProps) {
         onChangePoiKinds={onChangePoiKinds}
         roadviewVisible={roadviewVisible}
         onToggleRoadview={toggleRoadview}
+        distanceMeasureVisible={distanceMeasureVisible}
+        onToggleDistanceMeasure={onToggleDistanceMeasure ?? (() => {})}
         rightOpen={rightOpen}
         setRightOpen={handleSetRightOpen}
         sidebarOpen={useSidebar}
