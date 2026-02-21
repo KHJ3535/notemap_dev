@@ -69,7 +69,7 @@ export default function AccountsListPage({
     if (!onSort) {
       return null;
     }
-    
+
     // 현재 정렬 컬럼인 경우 정렬 방향에 따라 아이콘 표시
     if (sortColumn === column) {
       return sortDirection === "asc" ? (
@@ -78,7 +78,7 @@ export default function AccountsListPage({
         <ChevronDown className="h-4 w-4 ml-1" />
       );
     }
-    
+
     // 정렬되지 않은 컬럼은 기본적으로 오름차순 아이콘 표시
     return <ChevronUp className="h-4 w-4 ml-1 opacity-40" />;
   };
@@ -137,7 +137,9 @@ export default function AccountsListPage({
               {!hideEdit && (
                 <th className="px-4 py-3 text-center font-medium">계정 수정</th>
               )}
-              <th className="px-4 py-3 text-center font-medium">{removeLabel}</th>
+              <th className="px-4 py-3 text-center font-medium">
+                {removeLabel}
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -234,7 +236,13 @@ export default function AccountsListPage({
                       <button
                         className="inline-flex items-center gap-1 rounded-md border px-3 py-1.5 text-xs text-red-600 hover:bg-red-50"
                         onClick={() => {
-                          if (confirm(removeLabel === "팀 제외" ? "해당 직원을 팀에서 제외하시겠습니까?" : "해당 계정을 삭제하시겠습니까?"))
+                          if (
+                            confirm(
+                              removeLabel === "팀 제외"
+                                ? "해당 직원을 팀에서 제외하시겠습니까?"
+                                : "해당 계정을 삭제하시겠습니까?",
+                            )
+                          )
                             onRemove(u.id);
                         }}
                         title={removeLabel}

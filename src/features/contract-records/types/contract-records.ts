@@ -27,6 +27,8 @@ export interface StaffAllocation {
   name: string;
   accountId?: string; // 담당자 계정 ID (employee 타입일 때만 사용)
   type: "company" | "employee";
+  positionRank?: string | null; // 직급 (팀장 여부 판단용)
+  isTeamLeader?: boolean; // 팀장 여부 (최종수당 라벨 결정)
   percentage: number;
   isDirectInput: boolean;
   rebateAllowance: number;
