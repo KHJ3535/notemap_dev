@@ -26,7 +26,12 @@ interface StaffAllocationSectionProps {
   onStaffAllocationsChange: (allocations: StaffAllocation[]) => void;
   totalCalculation: number;
   totalRebate: number;
-  teamMembers?: Array<{ accountId: string; name: string | null }>;
+  teamMembers?: Array<{
+    accountId: string;
+    name: string | null;
+    positionRank?: string | null;
+    teamRole?: string | null;
+  }>;
   readOnly?: boolean;
 }
 
@@ -79,6 +84,8 @@ export function StaffAllocationSection({
                 ...staff,
                 name: selectedEmployee.name || "",
                 accountId: employeeId,
+                positionRank: selectedEmployee.positionRank ?? null,
+                isTeamLeader: selectedEmployee.teamRole === "manager",
               }
             : staff
         )
@@ -369,7 +376,7 @@ export function StaffAllocationSection({
                     htmlFor={`rebate-allowance-${staff.id}`}
                     className="text-xs text-gray-600"
                   >
-                    총합계
+                    총 금액
                   </Label>
                   <Input
                     id={`rebate-allowance-${staff.id}`}
@@ -384,7 +391,11 @@ export function StaffAllocationSection({
                     htmlFor={`final-allowance-${staff.id}`}
                     className="text-xs text-gray-600"
                   >
-                    최종수당
+                    {staff.type === "company"
+                      ? "회사입금액"
+                      : staff.isTeamLeader
+                      ? "팀장 급여"
+                      : "영업자 급여"}
                   </Label>
                   <Input
                     id={`final-allowance-${staff.id}`}

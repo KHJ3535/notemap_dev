@@ -169,7 +169,12 @@ export function SalesContractRecordsModal({
               data: {
                 id: string;
                 name: string;
-                members: Array<{ accountId: string; name: string | null }>;
+                members: Array<{
+                  accountId: string;
+                  name: string | null;
+                  positionRank?: string | null;
+                  teamRole?: "manager" | "staff" | null;
+                }>;
               };
             }>(`/dashboard/accounts/teams/${team.id}`);
 
@@ -204,16 +209,35 @@ export function SalesContractRecordsModal({
     staleTime: 10 * 60 * 1000, // 10분
   });
 
-  // 초기 데이터가 변경되면 상태 업데이트
+  // 초기 데이터 또는 팀 멤버 목록이 바뀌면 staffAllocations에 isTeamLeader 반영
   useEffect(() => {
+    const enrichAllocations = (base: typeof defaultData) => {
+      if (!myTeamMembers || myTeamMembers.length === 0) return base;
+      return {
+        ...base,
+        staffAllocations: base.staffAllocations.map((staff) => {
+          if (staff.type !== "employee" || !staff.accountId) return staff;
+          const member = myTeamMembers.find(
+            (m) => String(m.accountId) === String(staff.accountId)
+          );
+          if (!member) return staff;
+          return {
+            ...staff,
+            positionRank: (member as any).positionRank ?? staff.positionRank,
+            isTeamLeader: (member as any).teamRole === "manager",
+          };
+        }),
+      };
+    };
+
     if (initialData) {
-      setData(initialData);
-      setIsEditMode(false); // 초기 데이터가 있으면 읽기 전용 모드
+      setData(enrichAllocations(initialData));
+      setIsEditMode(false);
     } else {
-      setData(defaultData);
-      setIsEditMode(true); // 초기 데이터가 없으면 편집 모드 (신규 생성)
+      setData(enrichAllocations(defaultData));
+      setIsEditMode(true);
     }
-  }, [initialData]);
+  }, [initialData, myTeamMembers]);
 
   // 프로필 정보가 로드되면 담당자 정보 자동 채우기
   useEffect(() => {

@@ -328,7 +328,7 @@ export function FinancialInfoSection({
 
           {/* 총 합계 */}
           <div className="p-2 bg-primary/10 rounded-lg">
-            <div className="text-sm font-medium mb-1">총 합계</div>
+            <div className="text-sm font-medium mb-1">총 금액</div>
             <div className="text-lg font-bold text-primary">
               {(() => {
                 // 계산 공식: 과세시 (중개수수료+부가세)+((리베이트-지원금액)×0.967)
