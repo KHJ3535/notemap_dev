@@ -98,15 +98,6 @@ export function useSearchAndPoi({
       const keyword = (kw ?? q).trim();
       if (!keyword) return;
 
-      if (isTooBroadKeyword(keyword)) {
-        toast({
-          title: "검색 범위가 너무 넓어요",
-          variant: "destructive",
-          description: "정확한 주소 또는 건물명을 입력해주세요.",
-        });
-        return;
-      }
-
       await runSearch(keyword);
     },
     [q, runSearch, toast]

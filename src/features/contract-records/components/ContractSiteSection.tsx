@@ -78,7 +78,7 @@ export function ContractSiteSection({
               htmlFor="contract-site-team-contact"
               className="text-xs text-muted-foreground"
             >
-              분약팀연락처
+              분양팀 연락처
             </Label>
             <Input
               id="contract-site-team-contact"

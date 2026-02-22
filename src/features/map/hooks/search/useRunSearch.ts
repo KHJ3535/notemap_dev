@@ -6,7 +6,7 @@ import type { PropertyItem } from "@/features/properties/types/propertyItem";
 import type { LatLng } from "@/lib/geo/types";
 import { distanceMeters } from "@/lib/geo/distance";
 import { useToast } from "@/hooks/use-toast";
-import { isTooBroadKeyword } from "../../shared/utils/isTooBroadKeyword";
+import { isTooBroadKeyword, getBroadKeywordZoomLevel } from "../../shared/utils/isTooBroadKeyword";
 import { NEAR_THRESHOLD_M } from "../../shared/constants/mapGeo";
 
 // 👉 검색 주소랑 기존 핀 간 거리 허용치(조금 넉넉하게 3km까지)
@@ -53,12 +53,30 @@ export function useRunSearch({
       const trimmed = keyword.trim();
       if (!trimmed) return;
 
-      // 0) 광역 키워드 컷
+      // 0) 광역 키워드일 때는 마커 탐색이나 새로운 장소 등록(Draft) 유도 없이 해당 지역으로 시점만 이동
       if (isTooBroadKeyword(trimmed)) {
-        toast({
-          variant: "destructive",
-          title: "검색 범위가 너무 넓어요",
-          description: "정확한 주소 또는 건물명을 입력해주세요.",
+        const geocoder = new kakaoSDK.maps.services.Geocoder();
+
+        geocoder.addressSearch(trimmed, (addrResult: any[], addrStatus: string) => {
+          if (addrStatus === kakaoSDK.maps.services.Status.OK && addrResult?.length) {
+            const r0 = addrResult[0];
+            const y = r0.road_address?.y ?? r0.address?.y ?? r0.y;
+            const x = r0.road_address?.x ?? r0.address?.x ?? r0.x;
+            const coords = new kakaoSDK.maps.LatLng(parseFloat(y), parseFloat(x));
+            
+            // 키워드 자체를 분석하여 명시적으로 줌 레벨 도출 ("인천" -> 8, "인천 부평구" -> 6)
+            const zoomLevel = getBroadKeywordZoomLevel(trimmed);
+
+            mapInstance.setCenter(coords);
+            mapInstance.setLevel(zoomLevel); 
+            toast({ title: `'${trimmed}' 지역으로 이동했습니다.` });
+          } else {
+            toast({
+              variant: "destructive",
+               title: "검색 실패",
+               description: "해당 지역 정보를 찾을 수 없습니다.",
+            });
+          }
         });
         return;
       }

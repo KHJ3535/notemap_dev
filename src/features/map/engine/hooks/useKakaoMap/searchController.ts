@@ -1,6 +1,6 @@
 import type { MutableRefObject } from "react";
 import type { LatLng } from "@/lib/geo/types";
-import { isTooBroadKeyword } from "@/features/map/shared/utils/isTooBroadKeyword";
+import { isTooBroadKeyword, getBroadKeywordZoomLevel } from "@/features/map/shared/utils/isTooBroadKeyword";
 import type { useToast } from "@/hooks/use-toast";
 
 export type SearchOptions = {
@@ -106,21 +106,35 @@ export function createSearchController({
     const trimmed = query.trim();
     if (!trimmed) return;
 
-    // 광역 키워드면 아예 검색 자체를 막고 토스트만
-    if (isTooBroadKeyword(trimmed)) {
-      toast({
-        title: "검색 범위가 너무 넓어요",
-        variant: "destructive",
-        description: "정확한 주소 또는 건물명을 입력해주세요.",
-      });
-      return;
-    }
-
     const kakao = kakaoRef.current;
     const geocoder = geocoderRef.current ?? new kakao.maps.services.Geocoder();
     const places = placesRef.current ?? new kakao.maps.services.Places();
     geocoderRef.current = geocoder;
     placesRef.current = places;
+
+    // 광역 키워드면 해당 지역으로 중심 이동만 수행 (마커 생성 생략)
+    if (isTooBroadKeyword(trimmed)) {
+      geocoder.addressSearch(trimmed, (res: any[], status: string) => {
+        if (status === kakao.maps.services.Status.OK && res?.[0]) {
+          const r0 = res[0];
+          const coords = new kakao.maps.LatLng(parseFloat(r0.y), parseFloat(r0.x));
+          
+          // 키워드 자체를 분석하여 명시적으로 줌 레벨 도출
+          const zoomLevel = getBroadKeywordZoomLevel(trimmed);
+
+          mapRef.current?.setCenter(coords);
+          mapRef.current?.setLevel(zoomLevel);
+          toast({ title: `'${trimmed}' 지역으로 이동했습니다.` });
+        } else {
+          toast({
+            title: "지역 정보 없음",
+            variant: "destructive",
+            description: "해당 지역을 찾을 수 없습니다.",
+          });
+        }
+      });
+      return;
+    }
 
     const { preferStation = false, onFound } = opts || {};
     const endsWithStation = trimmed.endsWith("역");

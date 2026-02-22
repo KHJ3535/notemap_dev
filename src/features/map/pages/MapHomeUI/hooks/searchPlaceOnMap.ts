@@ -18,6 +18,8 @@ import { getDisplayPinKind } from "@/features/pins/lib/getDisplayPinKind";
 import { distM } from "@/features/map/poi/lib/geometry";
 import { hideLabelsAround } from "@/features/map/engine/overlays/labelRegistry";
 
+import { isTooBroadKeyword, getBroadKeywordZoomLevel } from "@/features/map/shared/utils/isTooBroadKeyword";
+
 type SearchDeps = {
   kakaoSDK: any;
   mapInstance: any;
@@ -71,6 +73,29 @@ export async function searchPlaceOnMap(text: string, deps: SearchDeps) {
   }
 
   onSubmitSearch?.(query);
+
+  // 0) 광역 키워드인 경우: 주소 검색만 수행하여 레벨 조정 후 바로 return (마커 및 상세메뉴 처리 안함)
+  if (isTooBroadKeyword(query)) {
+    const geocoder = new kakaoSDK.maps.services.Geocoder();
+    geocoder.addressSearch(query, (res: any[], status: string) => {
+      if (status === kakaoSDK.maps.services.Status.OK && res?.[0]) {
+        const r0 = res[0];
+        const lat = Number(r0.y);
+        const lng = Number(r0.x);
+        const coords = new kakaoSDK.maps.LatLng(lat, lng);
+        const zoomLevel = getBroadKeywordZoomLevel(query);
+        mapInstance.setCenter(coords);
+        mapInstance.setLevel(zoomLevel);
+        
+        // 광역일 때는 이전 임시 핀 제거 및 선택 해제 유지
+        clearTempMarkers?.();
+        onChangeHideLabelForId?.(undefined);
+      } else {
+        console.warn("[searchPlaceOnMap] failed to geo-locate broad keyword", query);
+      }
+    });
+    return;
+  }
 
   const setCenterOnly = (lat: number, lng: number) => {
     console.log("[searchPlaceOnMap] setCenterOnly", { lat, lng, query });
