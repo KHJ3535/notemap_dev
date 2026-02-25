@@ -25,6 +25,8 @@ import { Plus } from "lucide-react";
 
 interface ContractListProps {
   title: string;
+  /** 급여 컬럼 라벨 (관리자: "회사 입금액", 내 계약: "급여") */
+  salaryColumnLabel?: string;
   loadContracts: (
     page: number
   ) =>
@@ -38,6 +40,7 @@ interface ContractListProps {
 
 export function ContractList({
   title,
+  salaryColumnLabel,
   loadContracts: loadContractsFn,
   initialLoading = false,
   searchPlaceholder = "계약번호, 고객명, 담당자로 검색...",
@@ -291,7 +294,15 @@ export function ContractList({
 
         <Table
           data={processedData}
-          columns={contractTableColumns}
+          columns={
+            salaryColumnLabel
+              ? contractTableColumns.map((col) =>
+                  col.key === "salesPersonSalary"
+                    ? { ...col, label: salaryColumnLabel }
+                    : col
+                )
+              : contractTableColumns
+          }
           pagination={pagination}
           loading={isLoadingContracts}
           emptyMessage={emptyMessage}

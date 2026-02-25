@@ -421,6 +421,10 @@ export function transformContractListItemToContractData(
   const rebateMinusSupport = rebateAmount - supportAmount;
   const multiplier = item.isTaxed ? 0.967 : 1;
   const totalCalculation = brokerageAndVat + rebateMinusSupport * multiplier;
+  const companyPercent = item.companyPercent ?? 0;
+  const salesPersonSalary = Math.round(
+    (totalCalculation * companyPercent) / 100
+  ); // 담당자 분배와 동일: totalCalculation × 회사비율/100
 
   return {
     id: String(item.id),
@@ -428,7 +432,7 @@ export function transformContractListItemToContractData(
     customerName: item.customerName || "",
     customerContact: item.customerPhone || "",
     salesPerson: item.createdByName || "",
-    salesPersonSalary: 0, // 목록 응답에 없으므로 0으로 설정 (사용하지 않음)
+    salesPersonSalary, // 관리자 목록: 회사 입금액 (담당자 분배 기준)
     totalCalculation,
     contractDate: item.contractDate,
     balanceDate: item.finalPaymentDate || undefined,
@@ -460,6 +464,9 @@ export function transformMyContractListItemToContractData(
   const rebateMinusSupport = rebateAmount - supportAmount;
   const multiplier = item.isTaxed ? 0.967 : 1;
   const totalCalculation = brokerageAndVat + rebateMinusSupport * multiplier;
+  const salesPersonSalary = Math.round(
+    (totalCalculation * (item.mySharePercent ?? 0)) / 100
+  ); // 담당자 분배와 동일: totalCalculation × 내비율/100
 
   return {
     id: String(item.id),
@@ -467,7 +474,7 @@ export function transformMyContractListItemToContractData(
     customerName: item.customerName || "",
     customerContact: item.customerPhone || "",
     salesPerson: item.createdByName || "",
-    salesPersonSalary: item.myAmount, // 내 정산 금액을 salesPersonSalary에 매핑
+    salesPersonSalary, // 내 계약: 할당된 본인 급여 (담당자 분배 기준)
     totalCalculation,
     contractDate: item.contractDate,
     balanceDate: item.finalPaymentDate || undefined,

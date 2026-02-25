@@ -26,6 +26,7 @@ export function ContractManagement() {
   return (
     <ContractList
       title="계약 관리"
+      salaryColumnLabel="회사 입금액"
       loadContracts={loadContracts}
       initialLoading={true}
     />

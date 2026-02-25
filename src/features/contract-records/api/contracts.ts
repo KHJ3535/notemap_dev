@@ -101,6 +101,7 @@ export type ContractListItemResponse = {
   rebateUnits: number; // 리베이트 units (1 = 100만원)
   supportAmount: number; // 지원금액 (원)
   isTaxed: boolean; // 과세 여부 (0.967 적용)
+  companyPercent?: number; // 회사 비율 (담당자 분배 계산용)
 };
 
 // 계약 목록 응답 타입

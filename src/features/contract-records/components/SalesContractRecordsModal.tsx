@@ -73,7 +73,7 @@ const defaultData: SalesContractData = {
     vatStatus: "vat-included",
     totalBrokerageFee: 0,
     totalRebate: 0,
-    taxStatus: "taxable",
+    taxStatus: "tax-free",
     totalSupportAmount: 0,
     customerAccountNumber: "",
     customerBank: "",
