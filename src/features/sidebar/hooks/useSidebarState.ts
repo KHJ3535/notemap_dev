@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { usePathname } from "next/navigation";
 
 import type {
@@ -85,20 +86,22 @@ const mapBeforeDraftToListItem = (d: any): ListItem => {
 export function useSidebarState() {
   // 1) 즐겨찾기: 백엔드 API 기반
   const [nestedFavorites, setNestedFavorites] = useState<FavorateListItem[]>(
-    []
+    [],
   );
   const [favoritesLoading, setFavoritesLoading] = useState(true);
-  const favoriteIndexRef = useRef<Record<string, { groupId: string; itemId: string }>>({});
+  const favoriteIndexRef = useRef<
+    Record<string, { groupId: string; itemId: string }>
+  >({});
   const { toast } = useToast();
   const pathname = usePathname();
+  const qc = useQueryClient();
 
   // 즐겨찾기 그룹 로드
   const loadFavorites = useCallback(async () => {
     try {
       setFavoritesLoading(true);
-      const groups = await getFavoriteGroups(true); // 아이템 포함해서 로드
+      const groups = await getFavoriteGroups(true);
 
-      // 모든 pinId 수집
       const allPinIds = new Set<string>();
       groups.forEach((group) => {
         (group.items || []).forEach((item) => {
@@ -106,7 +109,7 @@ export function useSidebarState() {
         });
       });
 
-      // 병렬로 핀 정보 가져오기
+      // React Query fetchQuery로 캐시 사용 (중복 /pins/:id 호출 방지)
       const pinInfoMap = new Map<
         string,
         { title: string; lat?: number; lng?: number }
@@ -114,18 +117,22 @@ export function useSidebarState() {
       await Promise.all(
         Array.from(allPinIds).map(async (pinId) => {
           try {
-            const pin = await getPinRaw(pinId);
-            const pinName = pin.name || pin.badge || `Pin ${pinId}`;
+            const pin = await qc.fetchQuery({
+              queryKey: ["pin-raw", pinId],
+              queryFn: () => getPinRaw(pinId),
+              staleTime: 60_000,
+            });
+            const pinData = pin as { name?: string; badge?: string; lat?: number; lng?: number };
             pinInfoMap.set(pinId, {
-              title: pinName,
-              lat: typeof (pin as any).lat === "number" ? (pin as any).lat : Number((pin as any).lat),
-              lng: typeof (pin as any).lng === "number" ? (pin as any).lng : Number((pin as any).lng),
+              title: pinData.name || pinData.badge || `Pin ${pinId}`,
+              lat: typeof pinData.lat === "number" ? pinData.lat : Number(pinData.lat),
+              lng: typeof pinData.lng === "number" ? pinData.lng : Number(pinData.lng),
             });
           } catch (error) {
             console.error(`핀 ${pinId} 정보 가져오기 실패:`, error);
             pinInfoMap.set(pinId, { title: `Pin ${pinId}` });
           }
-        })
+        }),
       );
 
       // 백엔드 데이터를 프론트엔드 형식으로 변환
@@ -169,7 +176,7 @@ export function useSidebarState() {
     } finally {
       setFavoritesLoading(false);
     }
-  }, [toast]);
+  }, [toast, qc]);
 
   // 컴포넌트 마운트 시 즐겨찾기 로드 (계정 생성 페이지 제외)
   useEffect(() => {
@@ -210,7 +217,7 @@ export function useSidebarState() {
     useState<PendingReservation | null>(null);
   const clearPendingReservation = useCallback(
     () => setPendingReservation(null),
-    []
+    [],
   );
 
   const [loading, setLoading] = useState(false);
@@ -255,7 +262,7 @@ export function useSidebarState() {
 
   const getReservationOrder = useCallback(
     (pinId: string) => reservationOrderMap[pinId] ?? null,
-    [reservationOrderMap]
+    [reservationOrderMap],
   );
 
   // 생성: 현재 좌표 기준 임시핀 생성 → 서버 성공 후 목록 새로고침
@@ -292,7 +299,7 @@ export function useSidebarState() {
         setLoading(false);
       }
     },
-    [loadSiteReservations]
+    [loadSiteReservations],
   );
 
   // 삭제(임시핀): 서버 엔드포인트 생기면 연결. 지금은 UI만 갱신 후 서버 로딩.
@@ -310,14 +317,14 @@ export function useSidebarState() {
         setLoading(false);
       }
     },
-    [loadSiteReservations]
+    [loadSiteReservations],
   );
 
   // 예약 확정(임시핀→예약 핀): 서버 성공 후 두 목록 모두 새로고침
   const reserveVisitPlan = useCallback(
     async (
       draftId: string | number,
-      opts?: { reservedDate?: string; dateISO?: string }
+      opts?: { reservedDate?: string; dateISO?: string },
     ) => {
       setLoading(true);
       setErr(null);
@@ -325,7 +332,7 @@ export function useSidebarState() {
       try {
         // 임시핀 리스트 낙관적 제거
         setSiteReservations((prev) =>
-          prev.filter((x) => String(x.id) !== String(draftId))
+          prev.filter((x) => String(x.id) !== String(draftId)),
         );
         // 서버 동기화
         await Promise.all([loadSiteReservations(), refetchScheduled()]);
@@ -336,7 +343,7 @@ export function useSidebarState() {
         setLoading(false);
       }
     },
-    [loadSiteReservations, refetchScheduled]
+    [loadSiteReservations, refetchScheduled],
   );
 
   // 정렬(로컬 표시만 변경)
@@ -370,7 +377,7 @@ export function useSidebarState() {
     (id: string) => {
       void deleteVisitPlan(id);
     },
-    [deleteVisitPlan]
+    [deleteVisitPlan],
   );
 
   // 즐겨찾기 CRUD - 백엔드 API 연동
@@ -387,7 +394,7 @@ export function useSidebarState() {
         console.error("즐겨찾기 그룹 확인 실패:", error);
       }
     },
-    [nestedFavorites, loadFavorites]
+    [nestedFavorites, loadFavorites],
   );
 
   const addFavoriteToGroup = useCallback(
@@ -426,7 +433,7 @@ export function useSidebarState() {
         });
       }
     },
-    [loadFavorites, toast]
+    [loadFavorites, toast],
   );
 
   const createGroupAndAdd = useCallback(
@@ -465,7 +472,7 @@ export function useSidebarState() {
         });
       }
     },
-    [loadFavorites, toast]
+    [loadFavorites, toast],
   );
 
   const deleteFavoriteGroup = useCallback(
@@ -493,7 +500,7 @@ export function useSidebarState() {
         throw error;
       }
     },
-    [loadFavorites, toast]
+    [loadFavorites, toast],
   );
 
   const updateFavoriteGroupTitle = useCallback(
@@ -504,8 +511,8 @@ export function useSidebarState() {
         // 성공 시 로컬 상태 업데이트
         setNestedFavorites((prev) =>
           prev.map((g) =>
-            g.id === groupId ? { ...g, title: updated.title } : g
-          )
+            g.id === groupId ? { ...g, title: updated.title } : g,
+          ),
         );
 
         toast({
@@ -525,7 +532,7 @@ export function useSidebarState() {
         throw error;
       }
     },
-    [toast]
+    [toast],
   );
 
   const handleDeleteSubFavorite = useCallback(
@@ -553,7 +560,7 @@ export function useSidebarState() {
         });
       }
     },
-    [nestedFavorites, loadFavorites, toast]
+    [nestedFavorites, loadFavorites, toast],
   );
 
   const isFavoritePin = useCallback((pinId: string) => {
@@ -581,7 +588,7 @@ export function useSidebarState() {
         });
       }
     },
-    [loadFavorites, toast]
+    [loadFavorites, toast],
   );
 
   const getFavoritePinIds = useCallback((): string[] => {
@@ -596,7 +603,7 @@ export function useSidebarState() {
 
       // 삭제 확인 다이얼로그
       const confirmed = window.confirm(
-        `"${group.title}" 그룹을 삭제하시겠습니까?\n그룹 내 모든 즐겨찾기도 함께 삭제됩니다.`
+        `"${group.title}" 그룹을 삭제하시겠습니까?\n그룹 내 모든 즐겨찾기도 함께 삭제됩니다.`,
       );
 
       if (!confirmed) return;
@@ -611,7 +618,7 @@ export function useSidebarState() {
         console.error("그룹 삭제 실패:", error);
       }
     },
-    [nestedFavorites, deleteFavoriteGroup]
+    [nestedFavorites, deleteFavoriteGroup],
   );
 
   const handleContractRecordsClick = () => {

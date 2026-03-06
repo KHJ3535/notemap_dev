@@ -28,7 +28,7 @@ interface ContractListProps {
   /** 급여 컬럼 라벨 (관리자: "회사 입금액", 내 계약: "급여") */
   salaryColumnLabel?: string;
   loadContracts: (
-    page: number
+    page: number,
   ) =>
     | Promise<ContractData[]>
     | Promise<{ items: ContractData[]; total: number }>;
@@ -154,7 +154,7 @@ export function ContractList({
                 ?.toString()
                 .toLowerCase()
                 .includes(searchTerm.toLowerCase());
-            })
+            }),
           )
         : filteredContracts;
 
@@ -299,7 +299,7 @@ export function ContractList({
               ? contractTableColumns.map((col) =>
                   col.key === "salesPersonSalary"
                     ? { ...col, label: salaryColumnLabel }
-                    : col
+                    : col,
                 )
               : contractTableColumns
           }

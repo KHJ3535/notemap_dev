@@ -44,14 +44,14 @@ export const contractTableColumns: TableColumn<ContractData>[] = [
     label: "계약일",
     width: "110px",
     align: "center",
-    render: (value) => value ? formatDate(value) : "-",
+    render: (value) => (value ? formatDate(value) : "-"),
   },
   {
     key: "balanceDate",
     label: "잔금일",
     width: "110px",
     align: "center",
-    render: (value) => value ? formatDate(value) : "-",
+    render: (value) => (value ? formatDate(value) : "-"),
   },
   {
     key: "salesPersonSalary",

@@ -11,9 +11,8 @@ import {
   Users,
   FileText,
   Bell,
-  BarChart3,
   TrendingUp,
-  Activity,
+  Wallet,
   UserPlus,
 } from "lucide-react";
 import Link from "next/link";
@@ -67,6 +66,13 @@ export function AdminMainPage() {
       href: "/admin/performance",
       icon: TrendingUp,
       color: "bg-orange-500",
+    },
+    {
+      title: "가계부",
+      description: "지출 내역 관리",
+      href: "/admin/expense-management",
+      icon: Wallet,
+      color: "bg-amber-500",
     },
     {
       title: "공지사항",

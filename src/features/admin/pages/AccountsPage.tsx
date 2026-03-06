@@ -18,17 +18,17 @@ import { useToast } from "@/hooks/use-toast";
 import { SearchBar } from "@/features/table/components/SearchBar";
 import {
   getCredentialIdFromAccountId,
-  getCredentialDetail,
+  batchResolveAccountIdToCredentialAndRole,
 } from "@/features/users/api/account";
 
 export default function AccountsPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [editingCredentialId, setEditingCredentialId] = useState<string | null>(
-    null
+    null,
   );
   const [editingPositionRank, setEditingPositionRank] = useState<string | null>(
-    null
+    null,
   );
   const [viewingFavoritesAccountId, setViewingFavoritesAccountId] = useState<
     string | null
@@ -57,7 +57,7 @@ export default function AccountsPage() {
   // 정렬 핸들러
   const handleSort = (
     column: "name" | "rank" | null,
-    direction: "asc" | "desc"
+    direction: "asc" | "desc",
   ) => {
     setSortColumn(column);
     setSortDirection(direction);
@@ -140,46 +140,36 @@ export default function AccountsPage() {
   >(new Map());
   const loadingRolesRef = React.useRef<Set<string>>(new Set());
 
-  // 계정 목록이 변경될 때 각 계정의 role 정보 미리 로드
+  // 계정 목록이 변경될 때 credentialId + role 한 번에 배치 조회 (중복 호출 방지)
   React.useEffect(() => {
     if (!employeesList || employeesList.length === 0) return;
 
+    const accountsToLoad = employeesList.filter(
+      (employee) =>
+        !roleMap.has(employee.accountId) &&
+        !loadingRolesRef.current.has(employee.accountId),
+    );
+
+    if (accountsToLoad.length === 0) return;
+
+    const accountIds = accountsToLoad.map((e) => e.accountId);
+    accountIds.forEach((id) => loadingRolesRef.current.add(id));
+
     const loadRoles = async () => {
-      const accountsToLoad = employeesList.filter(
-        (employee) =>
-          !roleMap.has(employee.accountId) &&
-          !loadingRolesRef.current.has(employee.accountId)
-      );
-
-      if (accountsToLoad.length === 0) return;
-
-      const newRoleMap = new Map(roleMap);
-
-      // 병렬로 role 조회
-      await Promise.all(
-        accountsToLoad.map(async (employee) => {
-          const accountId = employee.accountId;
-          loadingRolesRef.current.add(accountId);
-
-          try {
-            // credentialId 조회
-            const credentialId = await getCredentialIdFromAccountId(accountId);
-            if (credentialId) {
-              // credential detail 조회하여 role 가져오기
-              const detail = await getCredentialDetail(credentialId);
-              console.log(`계정 ${accountId}의 role:`, detail.role);
-              newRoleMap.set(accountId, detail.role);
-            }
-          } catch (error) {
-            console.error(`계정 ${accountId}의 role 조회 실패:`, error);
-          } finally {
-            loadingRolesRef.current.delete(accountId);
-          }
-        })
-      );
-
-      // 상태 업데이트
-      setRoleMap(newRoleMap);
+      try {
+        const resolved =
+          await batchResolveAccountIdToCredentialAndRole(accountIds);
+        const newRoleMap = new Map(roleMap);
+        resolved.forEach(({ credentialId, role }, accountId) => {
+          newRoleMap.set(accountId, role);
+          credentialIdMapRef.current.set(accountId, credentialId);
+        });
+        setRoleMap(newRoleMap);
+      } catch (error) {
+        console.error("계정 role 배치 조회 실패:", error);
+      } finally {
+        accountIds.forEach((id) => loadingRolesRef.current.delete(id));
+      }
     };
 
     loadRoles();
@@ -206,9 +196,8 @@ export default function AccountsPage() {
     if (!credentialId && !loadingCredentialIdsRef.current.has(accountId)) {
       loadingCredentialIdsRef.current.add(accountId);
       try {
-        const fetchedCredentialId = await getCredentialIdFromAccountId(
-          accountId
-        );
+        const fetchedCredentialId =
+          await getCredentialIdFromAccountId(accountId);
         if (fetchedCredentialId) {
           credentialId = fetchedCredentialId;
           credentialIdMapRef.current.set(accountId, fetchedCredentialId);
@@ -231,7 +220,7 @@ export default function AccountsPage() {
 
     if (
       confirm(
-        "해당 계정을 비활성화하시겠습니까? 비활성화된 계정은 로그인할 수 없습니다."
+        "해당 계정을 비활성화하시겠습니까? 비활성화된 계정은 로그인할 수 없습니다.",
       )
     ) {
       disableAccountMutation.mutate({
@@ -260,9 +249,8 @@ export default function AccountsPage() {
     if (!credentialId && !loadingCredentialIdsRef.current.has(accountId)) {
       loadingCredentialIdsRef.current.add(accountId);
       try {
-        const fetchedCredentialId = await getCredentialIdFromAccountId(
-          accountId
-        );
+        const fetchedCredentialId =
+          await getCredentialIdFromAccountId(accountId);
         if (fetchedCredentialId) {
           credentialId = fetchedCredentialId;
           credentialIdMapRef.current.set(accountId, fetchedCredentialId);
@@ -311,7 +299,7 @@ export default function AccountsPage() {
   const viewingAccountFavorites = useMemo(() => {
     if (!viewingFavoritesAccountId) return null;
     const account = userRows.find(
-      (row) => row.id === viewingFavoritesAccountId
+      (row) => row.id === viewingFavoritesAccountId,
     );
     return account?.favoritePins || [];
   }, [viewingFavoritesAccountId, userRows]);
@@ -320,7 +308,7 @@ export default function AccountsPage() {
   const viewingAccountReservedPins = useMemo(() => {
     if (!viewingReservedPinsAccountId) return null;
     const account = userRows.find(
-      (row) => row.id === viewingReservedPinsAccountId
+      (row) => row.id === viewingReservedPinsAccountId,
     );
     return account?.reservedPinDrafts || [];
   }, [viewingReservedPinsAccountId, userRows]);

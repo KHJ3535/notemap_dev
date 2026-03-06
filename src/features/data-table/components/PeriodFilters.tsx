@@ -1,3 +1,8 @@
+/**
+ * PeriodFilters - 기간 선택 필터
+ * 이번 달 / 월별 선택 / 분기 선택 / 연도 선택, onClose 선택(팀 상세 등)
+ */
+
 import { Button } from "@/components/atoms/Button/Button";
 import { Label } from "@/components/atoms/Label/Label";
 import {
@@ -8,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/atoms/Select/Select";
 
-interface PerformanceFiltersProps {
+export interface PeriodFiltersProps {
   selectedPeriod: string;
   selectedYear: string;
   selectedQuarter?: string;
@@ -20,10 +25,11 @@ interface PerformanceFiltersProps {
   onYearChange: (year: string) => void;
   onQuarterChange?: (quarter: string) => void;
   onMonthChange?: (month: string) => void;
-  onClose: () => void;
+  /** 팀 상세 등에서 닫기 버튼이 필요할 때 사용 */
+  onClose?: () => void;
 }
 
-export function PerformanceFilters({
+export function PeriodFilters({
   selectedPeriod,
   selectedYear,
   selectedQuarter,
@@ -36,7 +42,7 @@ export function PerformanceFilters({
   onQuarterChange,
   onMonthChange,
   onClose,
-}: PerformanceFiltersProps) {
+}: PeriodFiltersProps) {
   return (
     <div className="flex items-center gap-4">
       <div className="flex items-center gap-2">
@@ -80,7 +86,10 @@ export function PerformanceFilters({
                 ))}
               </SelectContent>
             </Select>
-            <Select value={selectedQuarter || "1"} onValueChange={onQuarterChange || (() => {})}>
+            <Select
+              value={selectedQuarter || "1"}
+              onValueChange={onQuarterChange || (() => {})}
+            >
               <SelectTrigger className="w-24">
                 <SelectValue />
               </SelectTrigger>
@@ -108,7 +117,10 @@ export function PerformanceFilters({
                 ))}
               </SelectContent>
             </Select>
-            <Select value={selectedMonth || "1"} onValueChange={onMonthChange || (() => {})}>
+            <Select
+              value={selectedMonth || "1"}
+              onValueChange={onMonthChange || (() => {})}
+            >
               <SelectTrigger className="w-24">
                 <SelectValue />
               </SelectTrigger>
@@ -123,9 +135,11 @@ export function PerformanceFilters({
           </>
         )}
       </div>
-      <Button variant="outline" onClick={onClose}>
-        닫기
-      </Button>
+      {onClose && (
+        <Button variant="outline" onClick={onClose}>
+          닫기
+        </Button>
+      )}
     </div>
   );
 }

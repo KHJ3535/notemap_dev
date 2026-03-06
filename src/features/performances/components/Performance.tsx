@@ -3,13 +3,22 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { PerformanceData } from "../types/PerformanceData";
-import { StatsCards } from "./StatsCards";
+import {
+  DataTablePageLayout,
+  DataTablePageHeader,
+  StatCard,
+  StatCardsGrid,
+  DataTableSection,
+  PeriodFilters,
+  generateYearOptions,
+  getPeriodLabel,
+} from "@/features/data-table";
 import { TeamStatsCards } from "./TeamStatsCards";
 import { TeamAllowanceBarChart } from "./TeamAllowanceBarChart";
 import { TeamDetailView } from "./TeamDetailView";
-import { PerformanceFilters } from "./PerformanceFilters";
-import { generateYearOptions } from "../utils/performanceUtils";
 import { CHART_CONFIG } from "../utils/chartConfig";
+import { DollarSign, TrendingUp, Users, FileText } from "lucide-react";
+import { formatCurrency } from "@/components/contract-management/utils/contractUtils";
 import {
   getPerformanceSummary,
   getTeamEmployees,
@@ -142,32 +151,36 @@ export function Performance() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl p-6 space-y-6 bg-gray-50">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">실적 확인</h1>
-          <p className="text-gray-600 mt-1">계약기록 기반 실적 분석</p>
-          {performanceSummary?.resolvedRange.label && (
-            <p className="text-sm text-gray-500 mt-1">
-              기간: {performanceSummary.resolvedRange.label}
-            </p>
-          )}
-        </div>
-        <PerformanceFilters
-          selectedPeriod={selectedPeriod}
-          selectedYear={selectedYear}
-          selectedQuarter={selectedQuarter}
-          selectedMonth={selectedMonth}
-          yearOptions={yearOptions}
-          quarterOptions={quarterOptions}
-          monthOptions={monthOptions}
-          onPeriodChange={setSelectedPeriod}
-          onYearChange={setSelectedYear}
-          onQuarterChange={setSelectedQuarter}
-          onMonthChange={setSelectedMonth}
-          onClose={() => {}}
-        />
-      </div>
+    <DataTablePageLayout>
+      <DataTablePageHeader
+        title="실적 확인"
+        description="계약기록 기반 실적 분석"
+        periodLabel={
+          performanceSummary?.resolvedRange.label ||
+          getPeriodLabel(
+            selectedPeriod,
+            selectedYear,
+            selectedQuarter,
+            selectedMonth
+          )
+        }
+        actions={
+          <PeriodFilters
+            selectedPeriod={selectedPeriod}
+            selectedYear={selectedYear}
+            selectedQuarter={selectedQuarter}
+            selectedMonth={selectedMonth}
+            yearOptions={yearOptions}
+            quarterOptions={quarterOptions}
+            monthOptions={monthOptions}
+            onPeriodChange={setSelectedPeriod}
+            onYearChange={setSelectedYear}
+            onQuarterChange={setSelectedQuarter}
+            onMonthChange={setSelectedMonth}
+            onClose={() => {}}
+          />
+        }
+      />
 
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
@@ -176,16 +189,36 @@ export function Performance() {
       ) : (
         <>
           {/* 1. 회사 총매출 */}
-          <StatsCards
-            totalContracts={totalContracts}
-            totalAllowance={totalAllowance}
-            netProfit={netProfit}
-            totalEmployees={totalEmployees}
-          />
+          <StatCardsGrid title="회사 총매출" columns={4}>
+            <StatCard
+              label="총매출"
+              value={formatCurrency(totalAllowance)}
+              icon={<DollarSign className="h-6 w-6" />}
+              variant="blue"
+            />
+            <StatCard
+              label="순수익"
+              value={formatCurrency(netProfit)}
+              valueClassName="text-green-600"
+              icon={<TrendingUp className="h-6 w-6" />}
+              variant="green"
+            />
+            <StatCard
+              label="총 계약 건수"
+              value={`${totalContracts.toLocaleString()}건`}
+              icon={<FileText className="h-6 w-6" />}
+              variant="purple"
+            />
+            <StatCard
+              label="총 인원수"
+              value={`${totalEmployees}명`}
+              icon={<Users className="h-6 w-6" />}
+              variant="orange"
+            />
+          </StatCardsGrid>
 
           {/* 2. 팀 실적 - 그래프 */}
-          <div className="space-y-4">
-            <h2 className="text-xl font-bold text-gray-900">팀 실적</h2>
+          <DataTableSection title="팀 실적">
             {teamStats.length > 0 ? (
               <TeamAllowanceBarChart
                 teamStats={teamStats}
@@ -196,7 +229,7 @@ export function Performance() {
                 표시할 팀 실적 데이터가 없습니다.
               </div>
             )}
-          </div>
+          </DataTableSection>
 
           {/* 3. 팀별 총 금액, 건수, 순수익 카드 */}
           {teamStats.length > 0 ? (
@@ -241,6 +274,6 @@ export function Performance() {
           )}
         </>
       )}
-    </div>
+    </DataTablePageLayout>
   );
 }

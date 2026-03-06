@@ -30,35 +30,46 @@ export async function getProfile(): Promise<ProfileResponse> {
       message: string;
       data: ProfileResponse;
     }>("/dashboard/accounts/me/profile");
-    
+
     // 백엔드 원본 응답 확인 (타입 캐스팅 없이)
     console.log("=== 프로필 조회 API 원본 응답 ===");
     console.log("전체 응답:", response);
     console.log("response.data:", response.data);
     console.log("response.data.data:", response.data.data);
     if (response.data.data?.account) {
-      console.log("response.data.data.account (전체):", response.data.data.account);
-      console.log("account 객체의 모든 키:", Object.keys(response.data.data.account));
+      console.log(
+        "response.data.data.account (전체):",
+        response.data.data.account,
+      );
+      console.log(
+        "account 객체의 모든 키:",
+        Object.keys(response.data.data.account),
+      );
       // 원본 응답 전체 확인 (JSON 문자열로)
       const accountJson = JSON.stringify(response.data.data.account, null, 2);
       console.log("account 객체 (JSON):", accountJson);
-      
+
       console.log("서류 필드 값:", {
-        docUrlResidentRegistration: (response.data.data.account as any).docUrlResidentRegistration,
-        docUrlResidentAbstract: (response.data.data.account as any).docUrlResidentAbstract,
+        docUrlResidentRegistration: (response.data.data.account as any)
+          .docUrlResidentRegistration,
+        docUrlResidentAbstract: (response.data.data.account as any)
+          .docUrlResidentAbstract,
         docUrlIdCard: (response.data.data.account as any).docUrlIdCard,
-        docUrlFamilyRelation: (response.data.data.account as any).docUrlFamilyRelation,
+        docUrlFamilyRelation: (response.data.data.account as any)
+          .docUrlFamilyRelation,
       });
-      
+
       // 모든 필드 값 확인
-      const allFields = Object.entries(response.data.data.account).map(([key, value]) => ({
-        key,
-        value,
-        type: typeof value,
-      }));
+      const allFields = Object.entries(response.data.data.account).map(
+        ([key, value]) => ({
+          key,
+          value,
+          type: typeof value,
+        }),
+      );
       console.log("account 객체의 모든 필드:", allFields);
     }
-    
+
     return response.data.data;
   } catch (error: any) {
     console.error("프로필 조회 실패:", error);
@@ -94,7 +105,7 @@ export type UpdateMyProfileResponse = {
 };
 
 export async function updateMyProfile(
-  data: UpdateMyProfileRequest
+  data: UpdateMyProfileRequest,
 ): Promise<UpdateMyProfileResponse> {
   try {
     const response = await api.post<{
@@ -224,7 +235,7 @@ export type CreateEmployeeInfoResponse = {
 
 // 새로운 통합 API: 사원 계정 생성 (계정 + 직원 정보 한 번에)
 export async function createEmployee(
-  data: CreateEmployeeRequest
+  data: CreateEmployeeRequest,
 ): Promise<CreateEmployeeResponse> {
   try {
     console.log("사원 계정 생성 API 호출:", data);
@@ -244,7 +255,7 @@ export async function createEmployee(
 
 // 첫 번째 API: 계정 생성 (Deprecated: createEmployee 사용 권장)
 export async function createAccount(
-  data: CreateAccountRequest
+  data: CreateAccountRequest,
 ): Promise<CreateAccountResponse> {
   try {
     console.log("계정 생성 API 호출:", data);
@@ -264,7 +275,7 @@ export async function createAccount(
 // 두 번째 API: 직원 정보 생성
 export async function createEmployeeInfo(
   credentialId: string,
-  data: CreateEmployeeInfoRequest
+  data: CreateEmployeeInfoRequest,
 ): Promise<CreateEmployeeInfoResponse> {
   try {
     console.log("직원 정보 생성 API 호출:", { credentialId, data });
@@ -313,7 +324,7 @@ export type CredentialDetailResponse = {
 };
 
 export async function getCredentialDetail(
-  credentialId: string
+  credentialId: string,
 ): Promise<CredentialDetailResponse> {
   try {
     const response = await api.get<{
@@ -391,7 +402,7 @@ export type EmployeeListItem = {
 };
 
 export async function getEmployeesList(
-  query?: EmployeeListQuery
+  query?: EmployeeListQuery,
 ): Promise<EmployeeListItem[]> {
   try {
     const params = new URLSearchParams();
@@ -431,16 +442,65 @@ export type PatchPositionRankRequest = {
 
 export async function patchPositionRank(
   credentialId: string,
-  data: PatchPositionRankRequest
+  data: PatchPositionRankRequest,
 ): Promise<void> {
   try {
     await api.patch(
       `/dashboard/accounts/credentials/${credentialId}/position-rank`,
-      data
+      data,
     );
   } catch (error: any) {
     console.error("직급 변경 API 호출 실패:", error);
     throw error;
+  }
+}
+
+// accountId 목록에 대해 credentialId + role을 한 번에 조회 (중복 호출 방지)
+export async function batchResolveAccountIdToCredentialAndRole(
+  accountIds: string[],
+): Promise<
+  Map<
+    string,
+    { credentialId: string; role: "admin" | "manager" | "staff" }
+  >
+> {
+  const result = new Map<
+    string,
+    { credentialId: string; role: "admin" | "manager" | "staff" }
+  >();
+  const idSet = new Set(accountIds);
+  if (idSet.size === 0) return result;
+
+  try {
+    const listResponse = await api.get<{
+      message: string;
+      data: Array<{ id: string }>;
+    }>("/dashboard/accounts/credentials");
+
+    if (!listResponse.data.data || listResponse.data.data.length === 0) {
+      return result;
+    }
+
+    const credentialsToCheck = listResponse.data.data.slice(0, 100);
+    for (const cred of credentialsToCheck) {
+      if (result.size >= idSet.size) break;
+      try {
+        const detail = await getCredentialDetail(cred.id);
+        const accountId = detail.account?.id;
+        if (accountId && idSet.has(accountId)) {
+          result.set(accountId, { credentialId: cred.id, role: detail.role });
+        }
+      } catch {
+        continue;
+      }
+    }
+    return result;
+  } catch (error: any) {
+    console.warn(
+      "계정 배치 조회 실패:",
+      error?.response?.status || error?.message,
+    );
+    return result;
   }
 }
 
@@ -449,7 +509,7 @@ export async function patchPositionRank(
 // credentials 목록을 조회하여 찾으려고 시도합니다.
 // 만약 이 API가 실패하면 null을 반환하여 기본 정보만 표시합니다.
 export async function getCredentialIdFromAccountId(
-  accountId: string
+  accountId: string,
 ): Promise<string | null> {
   try {
     const listResponse = await api.get<{
@@ -466,7 +526,7 @@ export async function getCredentialIdFromAccountId(
     // 각 credential의 detail을 조회하여 accountId와 일치하는 것을 찾기
     // 성능상 최대 50개까지만 확인
     const credentialsToCheck = listResponse.data.data.slice(0, 50);
-    
+
     for (const cred of credentialsToCheck) {
       try {
         const detailResponse = await api.get<{
@@ -492,7 +552,10 @@ export async function getCredentialIdFromAccountId(
   } catch (error: any) {
     // credentials 목록 조회 실패 시 에러를 로그로만 남기고 null 반환
     // (기본 정보만 표시하도록 함)
-    console.warn("credentialId 조회 실패 (기본 정보만 표시):", error?.response?.status || error?.message);
+    console.warn(
+      "credentialId 조회 실패 (기본 정보만 표시):",
+      error?.response?.status || error?.message,
+    );
     return null;
   }
 }

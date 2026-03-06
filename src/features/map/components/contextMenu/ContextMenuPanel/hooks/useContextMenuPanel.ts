@@ -11,7 +11,6 @@ import {
 import type React from "react";
 
 import { getPinRaw } from "@/shared/api/pins/queries/getPin";
-import { pinKeys } from "@/features/pins/hooks/usePin";
 import { useQueryClient } from "@tanstack/react-query";
 import type {
   CreateMode,
@@ -152,15 +151,16 @@ export function useContextMenuPanelLogic(props: ContextMenuPanelProps) {
     };
 
     // 1️⃣ 캐시에 있으면 네트워크 없이 바로 사용
-    const cached = qc.getQueryData<any>(pinKeys.detail(idStr));
+    const rawKey = ["pin-raw", idStr] as const;
+    const cached = qc.getQueryData<any>(rawKey);
     if (cached) {
       fillFromPin(cached);
       return;
     }
 
-    // 2️⃣ 없으면 fetchQuery (동일 key 중복 호출은 React Query가 하나로 dedupe)
+    // 2️⃣ 없으면 fetchQuery (sidebar와 캐시 공유)
     qc.fetchQuery({
-      queryKey: pinKeys.detail(idStr),
+      queryKey: rawKey,
       queryFn: () => getPinRaw(idStr),
       staleTime: 60_000,
     })
@@ -333,7 +333,7 @@ export function useContextMenuPanelLogic(props: ContextMenuPanelProps) {
     if (!canView) return;
     const idStr = String(propertyId);
     qc.prefetchQuery({
-      queryKey: pinKeys.detail(idStr),
+      queryKey: ["pin-raw", idStr],
       queryFn: () => getPinRaw(idStr),
       staleTime: 60_000,
     });

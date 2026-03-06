@@ -205,7 +205,7 @@ export default function ViewStage({
         });
       }
     },
-    [pinId, data?.title, loadFavorites, toast]
+    [pinId, data?.title, loadFavorites, toast],
   );
 
   // 새 그룹 생성 및 추가
@@ -242,13 +242,13 @@ export default function ViewStage({
         });
       }
     },
-    [pinId, data?.title, loadFavorites, toast]
+    [pinId, data?.title, loadFavorites, toast],
   );
 
   const hasData = !!data;
   const formInput = useMemo(
     () => ({ open: true, data: data ?? ({} as PropertyViewDetails) }),
-    [data]
+    [data],
   );
   const f = useViewForm(formInput);
 
@@ -339,7 +339,7 @@ export default function ViewStage({
       eat(e);
       onClose();
     },
-    [onClose]
+    [onClose],
   );
 
   // ✨ 콘텐츠 패널에만 버블 단계 전파 차단 (포털 모드에서만 사용)
@@ -402,12 +402,12 @@ export default function ViewStage({
   const panelClass = cn(
     "bg-white shadow-xl overflow-hidden flex flex-col",
     "w-screen h-screen max-w-none max-h-none rounded-none",
-    "md:w-[1100px] md:max-w-[95vw] md:max-h-[92vh] md:rounded-2xl"
+    "md:w-[1100px] md:max-w-[95vw] md:max-h-[92vh] md:rounded-2xl",
   );
 
   const positionedPanelClass = cn(
     "absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2",
-    panelClass
+    panelClass,
   );
 
   if (loading && !hasData) {
@@ -488,7 +488,7 @@ export default function ViewStage({
               "flex-1 min_h-0 overflow-y-auto overflow-x-hidden overscroll-y-contain",
               "px-4 py-4 md:px-5 md:py-4",
               "grid gap-4 md:gap-6",
-              "grid-cols-1 md:grid-cols-[300px_1fr]"
+              "grid-cols-1 md:grid-cols-[300px_1fr]",
             )}
           >
             <div className="space-y-4">

@@ -111,7 +111,7 @@ export function SalesContractRecordsModal({
   onDataChange,
 }: SalesContractViewModalProps) {
   const [data, setData] = useState<SalesContractData>(
-    initialData || defaultData
+    initialData || defaultData,
   );
   const [isLoading, setIsLoading] = useState(false);
   const [isEditMode, setIsEditMode] = useState(!initialData); // 초기 데이터가 없으면 편집 모드 (신규 생성)
@@ -146,14 +146,21 @@ export function SalesContractRecordsModal({
         // 팀 목록 가져오기 (상태 코드 로깅용 api.get 사용)
         let teams: Array<{ id: number | string; name: string }> = [];
         try {
-          const teamsRes = await api.get<{ message: string; data: Array<{ id: number | string; name: string }> }>(
-            "/dashboard/accounts/teams"
-          );
+          const teamsRes = await api.get<{
+            message: string;
+            data: Array<{ id: number | string; name: string }>;
+          }>("/dashboard/accounts/teams");
           teams = teamsRes.data.data ?? [];
-          log("getTeams 요청: 성공", { status: teamsRes.status, 팀수: teams.length });
+          log("getTeams 요청: 성공", {
+            status: teamsRes.status,
+            팀수: teams.length,
+          });
         } catch (err: any) {
           const status = err?.response?.status;
-          log("getTeams 요청: 실패", { status: status ?? "network/기타", error: err?.message });
+          log("getTeams 요청: 실패", {
+            status: status ?? "network/기타",
+            error: err?.message,
+          });
           return [];
         }
 
@@ -180,10 +187,13 @@ export function SalesContractRecordsModal({
             }>(`/dashboard/accounts/teams/${team.id}`);
 
             const status = teamDetailResponse.status;
-            log(`teams/${team.id} 요청: 성공`, { status: status ?? 200, 멤버수: teamDetailResponse.data.data.members.length });
+            log(`teams/${team.id} 요청: 성공`, {
+              status: status ?? 200,
+              멤버수: teamDetailResponse.data.data.members.length,
+            });
 
             const isMyTeam = teamDetailResponse.data.data.members.some(
-              (member) => String(member.accountId) === String(accountId)
+              (member) => String(member.accountId) === String(accountId),
             );
 
             if (isMyTeam) {
@@ -193,7 +203,10 @@ export function SalesContractRecordsModal({
             }
           } catch (err: any) {
             const status = err?.response?.status;
-            log(`teams/${team.id} 요청: 실패`, { status: status ?? "network/기타", error: err?.message });
+            log(`teams/${team.id} 요청: 실패`, {
+              status: status ?? "network/기타",
+              error: err?.message,
+            });
             continue;
           }
         }
@@ -202,7 +215,10 @@ export function SalesContractRecordsModal({
         return [];
       } catch (error: any) {
         const status = error?.response?.status;
-        console.error("[담당자목록] 팀 멤버 조회 실패", { status: status ?? "network/기타", error: error?.message });
+        console.error("[담당자목록] 팀 멤버 조회 실패", {
+          status: status ?? "network/기타",
+          error: error?.message,
+        });
         return [];
       }
     },
@@ -219,7 +235,7 @@ export function SalesContractRecordsModal({
         staffAllocations: base.staffAllocations.map((staff) => {
           if (staff.type !== "employee" || !staff.accountId) return staff;
           const member = myTeamMembers.find(
-            (m) => String(m.accountId) === String(staff.accountId)
+            (m) => String(m.accountId) === String(staff.accountId),
           );
           if (!member) return staff;
           return {
@@ -264,7 +280,7 @@ export function SalesContractRecordsModal({
   // 재사용 가능한 내부 계산 함수
   const recalculateTotal = (
     financialInfo: SalesContractData["financialInfo"],
-    currentStatus: SalesContractData["status"]
+    currentStatus: SalesContractData["status"],
   ) => {
     const isInvalidStatus =
       currentStatus === "rejected" || currentStatus === "cancelled";
@@ -299,7 +315,7 @@ export function SalesContractRecordsModal({
     // 부가세 자동 계산 (부가세 선택시 10%, 미부가세 선택시 0%)
     const vat = calculateVAT(
       financialInfo.brokerageFee,
-      financialInfo.vatStatus
+      financialInfo.vatStatus,
     );
 
     // 중개보수금합계 자동 계산
@@ -315,7 +331,10 @@ export function SalesContractRecordsModal({
     // 계산 공식: 과세시 (중개수수료+부가세)+((리베이트-지원금액)×0.967)
     // 비과세시 (중개수수료+부가세)+(리베이트-지원금액)
     // 부결, 해약 시에는 0 처리
-    const totalCalculation = recalculateTotal(updatedFinancialInfo, data.status);
+    const totalCalculation = recalculateTotal(
+      updatedFinancialInfo,
+      data.status,
+    );
 
     handleDataChange({
       ...data,
@@ -452,7 +471,8 @@ export function SalesContractRecordsModal({
       });
       return;
     }
-    const isInvalidStatus = data.status === "rejected" || data.status === "cancelled";
+    const isInvalidStatus =
+      data.status === "rejected" || data.status === "cancelled";
     if (!isInvalidStatus && data.totalCalculation <= 0) {
       toast({
         title: "입력 오류",
@@ -472,7 +492,7 @@ export function SalesContractRecordsModal({
         const contractId = Number(data.id);
         const updateRequest = transformSalesContractToUpdateRequest(
           data,
-          profile
+          profile,
         );
         console.log("변환된 수정 요청 데이터:", updateRequest);
         const result = await updateContract(contractId, updateRequest);
@@ -495,7 +515,7 @@ export function SalesContractRecordsModal({
         // 백엔드 API 형식으로 변환
         const requestData = transformSalesContractToCreateRequest(
           data,
-          profile
+          profile,
         );
         console.log("변환된 요청 데이터:", requestData);
 
@@ -761,7 +781,7 @@ export function SalesContractRecordsModal({
                           | "completed";
                         const newTotal = recalculateTotal(
                           data.financialInfo,
-                          newStatus
+                          newStatus,
                         );
 
                         handleDataChange({
